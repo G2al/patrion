@@ -5,9 +5,22 @@
         working: false,
         draft: '',
         optimistic: '',
+        queued: [],
         async submit(question = null) {
             const text = String(question ?? this.draft).trim()
-            if (! text || this.working) return
+            if (! text) return
+
+            if (this.working) {
+                this.queued.push(text)
+                this.draft = ''
+                this.$nextTick(() => this.scroll())
+                return
+            }
+
+            await this.run(text)
+        },
+        async run(text) {
+            if (! text) return
 
             this.optimistic = text
             this.draft = ''
@@ -24,6 +37,11 @@
                     this.scroll()
                     this.$refs.input?.focus()
                 })
+
+                if (this.queued.length) {
+                    const next = this.queued.shift()
+                    this.$nextTick(() => this.run(next))
+                }
             }
         },
         resize() {
@@ -89,6 +107,7 @@
         .patrion-ai-user-text { display: block; margin: 0; padding: 0; text-align: left; white-space: pre-wrap; }
         .dark .patrion-ai-message.is-user .patrion-ai-bubble { background: #e8edf5; color: #172033; }
         .patrion-ai-message.is-assistant .patrion-ai-bubble { max-width: calc(100% - 2.05rem); padding: .1rem 0; color: var(--ai-ink); }
+        .patrion-ai-streaming-preview { min-height: 1.25rem; white-space: pre-wrap; overflow-wrap: anywhere; }
         .patrion-ai-bubble p + p, .patrion-ai-bubble ul, .patrion-ai-bubble ol { margin-top: .5rem; }
         .patrion-ai-bubble ul { list-style: disc; padding-left: 1.05rem; }
         .patrion-ai-bubble ol { list-style: decimal; padding-left: 1.05rem; }
@@ -233,9 +252,14 @@
                     <div x-cloak x-show="working" class="patrion-ai-message is-user">
                         <div class="patrion-ai-bubble"><span class="patrion-ai-user-text" x-text="optimistic"></span><div class="patrion-ai-time">adesso</div></div>
                     </div>
+                    <template x-for="(queuedMessage, index) in queued" :key="`queued-${index}`">
+                        <div class="patrion-ai-message is-user">
+                            <div class="patrion-ai-bubble"><span class="patrion-ai-user-text" x-text="queuedMessage"></span><div class="patrion-ai-time">in coda</div></div>
+                        </div>
+                    </template>
                     <div x-cloak x-show="working" class="patrion-ai-message is-assistant">
                         <div class="patrion-ai-assistant-mark"><x-filament::icon icon="heroicon-o-sparkles" class="h-3 w-3" /></div>
-                        <div class="patrion-ai-bubble" wire:stream="ai-answer"></div>
+                        <div class="patrion-ai-bubble patrion-ai-streaming-preview" wire:stream="ai-answer"></div>
                     </div>
                     <div x-cloak x-show="working" class="patrion-ai-thinking">
                         <span wire:stream="ai-status">Analizzo la richiesta…</span>
