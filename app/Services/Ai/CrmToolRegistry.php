@@ -15,6 +15,7 @@ use App\Filament\Resources\Practices\PracticeResource;
 use App\Filament\Resources\Prospects\ProspectResource;
 use App\Filament\Support\ItalianOptions;
 use App\Models\Activity;
+use App\Models\AiContactProfile;
 use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\Contact;
@@ -51,6 +52,9 @@ class CrmToolRegistry
                 'limit' => ['type' => 'integer', 'description' => 'Numero massimo di risultati, da 1 a 20.'],
             ]),
             $this->tool('get_contact_history', 'Recupera il quadro completo e verificabile di un cliente o prospect: relationship_notes, informazioni importanti, note, timeline, appuntamenti, attività, pratiche e documenti. Usalo sempre dopo search_contacts quando l’utente nomina una persona o chiede preferenze, storico o dettagli.', [
+                'contact_id' => ['type' => 'integer', 'description' => 'ID del contatto restituito da search_contacts.'],
+            ]),
+            $this->tool('get_contact_consulting_dossier', 'Prepara un dossier consulenziale completo per analizzare un cliente o prospect, includendo note relazionali, informazioni importanti e storico.', [
                 'contact_id' => ['type' => 'integer', 'description' => 'ID del contatto restituito da search_contacts.'],
             ]),
             $this->tool('search_companies', 'Cerca aziende per ragione sociale, partita IVA, codice fiscale, email o settore.', [
@@ -99,6 +103,7 @@ class CrmToolRegistry
             'get_appointments' => $this->appointments($arguments, $user),
             'search_contacts' => $this->contacts($arguments),
             'get_contact_history' => $this->contactHistory($arguments, $user),
+            'get_contact_consulting_dossier' => $this->consultingDossier($arguments, $user),
             'search_companies' => $this->companies($arguments),
             'get_company_history' => $this->companyHistory($arguments, $user),
             'get_goal_progress' => $this->goals($arguments, $user),
@@ -237,6 +242,31 @@ class CrmToolRegistry
             'notes' => $notes->map(fn ($note): array => ['title' => $note->title, 'content' => $this->text($note->content), 'important' => $note->is_important, 'date' => $note->created_at->toIso8601String()])->all(),
             'timeline' => $timeline->map(fn ($event): array => ['type' => $event->event_type, 'title' => $event->title, 'description' => $this->text($event->description), 'date' => $event->occurred_at->toIso8601String()])->all(),
         ];
+    }
+
+    /** @param array<string, mixed> $arguments */
+    private function consultingDossier(array $arguments, User $user): array
+    {
+        $contactId = (int) ($arguments['contact_id'] ?? 0);
+        $dossier = $this->contactHistory(['contact_id' => $contactId], $user);
+        $contact = Contact::findOrFail($contactId);
+        $c = $dossier['contact'];
+        $facts = [sprintf('%s: %s, priorità %s.', $this->contactName($contact), $c['status'], $c['priority'] ?? 'non indicata')];
+        if ($c['relationship_notes']) {
+            $facts[] = 'Note relazionali: '.$c['relationship_notes'];
+        }
+        if ($c['important_information']) {
+            $facts[] = 'Informazioni importanti: '.$c['important_information'];
+        }
+        if ($c['next_follow_up_at']) {
+            $facts[] = 'Prossimo follow-up: '.$c['next_follow_up_at'];
+        }
+        $facts[] = sprintf('Storico: %d appuntamenti, %d attività, %d pratiche, %d note.', count($dossier['appointments']), count($dossier['activities']), count($dossier['practices']), count($dossier['notes']));
+        $summary = implode(' ', $facts);
+        $fingerprint = hash('sha256', json_encode($dossier, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $profile = AiContactProfile::updateOrCreate(['user_id' => $user->id, 'contact_id' => $contactId], ['summary' => $summary, 'source_fingerprint' => $fingerprint, 'generated_at' => now()]);
+
+        return [...$dossier, 'consulting' => ['summary' => $profile->summary, 'generated_at' => $profile->generated_at?->toIso8601String(), 'facts_only' => true]];
     }
 
     /** @param array<string, mixed> $arguments */

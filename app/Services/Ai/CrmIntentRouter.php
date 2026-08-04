@@ -22,6 +22,7 @@ final class CrmIntentRouter
         }
 
         $tools = [];
+        $advisory = $this->containsAny($normalized, ['analizz', 'consigli', 'migliorare', 'opportunit', 'rischi', 'evitare', 'cosa posso fare', 'come gestire', 'strategia', 'consulenzial', 'copilota', 'proposta']);
         $this->addWhen($tools, $normalized, ['appuntament', 'agenda', 'calendario', 'incontr', 'telefonat'], ['get_appointments']);
         $this->addWhen($tools, $normalized, ['obiettiv', 'target', 'traguard'], ['get_goal_progress']);
         $this->addWhen($tools, $normalized, ['attivit', 'task', 'scadut', 'promemoria', 'cosa devo fare'], ['get_due_activities']);
@@ -48,6 +49,10 @@ final class CrmIntentRouter
             $tools = ['search_contacts', 'get_contact_history', ...$tools];
         }
 
+        if ($advisory && $this->containsAny($normalized, ['client', 'prosp', 'contatt', 'persona', 'parlami', ' su ', ' per ', ' con '])) {
+            $tools = ['search_contacts', 'get_contact_history', 'get_contact_consulting_dossier', ...$tools];
+        }
+
         $this->addWhen($tools, $normalized, ['panoramica', 'riepilogo crm', 'situazione generale', 'quanti client', 'quanti prospect'], ['get_crm_overview']);
         $tools = array_values(array_unique($tools));
 
@@ -56,9 +61,9 @@ final class CrmIntentRouter
         }
 
         return [
-            'mode' => 'crm',
+            'mode' => $advisory ? 'advisory' : 'crm',
             'tools' => $tools,
-            'guidance' => 'Rispondi esclusivamente alla richiesta corrente. Usa solo gli strumenti pertinenti disponibili e non ripetere la risposta al turno precedente, salvo richiesta esplicita dell’utente.',
+            'guidance' => $advisory ? 'Modalità consulenziale interna: ricostruisci il dossier completo e formula ipotesi operative verificabili, distinguendo fatti, inferenze e dati mancanti. Non dare consulenza finanziaria definitiva né inventare informazioni.' : 'Rispondi esclusivamente alla richiesta corrente. Usa solo gli strumenti pertinenti disponibili e non ripetere la risposta al turno precedente, salvo richiesta esplicita dell’utente.',
         ];
     }
 
