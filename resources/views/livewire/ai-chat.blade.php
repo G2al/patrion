@@ -85,7 +85,8 @@
         .patrion-ai-message.is-user { justify-content: flex-end; }
         .patrion-ai-assistant-mark { display: grid; width: 1.55rem; height: 1.55rem; flex: 0 0 auto; place-items: center; border: 1px solid var(--ai-line); border-radius: .5rem; background: var(--ai-soft); color: var(--ai-ink); }
         .patrion-ai-bubble { max-width: 83%; font-size: .8rem; line-height: 1.58; overflow-wrap: anywhere; }
-        .patrion-ai-message.is-user .patrion-ai-bubble { display: inline-flex; width: fit-content; height: auto !important; min-height: 0 !important; max-width: 78%; flex-direction: column; align-items: flex-end; gap: .28rem; padding: .55rem .7rem; border-radius: .82rem .82rem .22rem .82rem; background: var(--ai-ink); color: var(--ai-surface); line-height: 1.42; white-space: pre-wrap; }
+        .patrion-ai-message.is-user .patrion-ai-bubble { display: inline-flex; width: auto; height: auto !important; min-height: 0 !important; max-width: 74%; flex-direction: column; align-items: stretch; gap: .3rem; padding: .58rem .72rem .48rem; border-radius: .9rem .9rem .24rem .9rem; background: var(--ai-ink); color: var(--ai-surface); line-height: 1.42; white-space: normal; }
+        .patrion-ai-user-text { display: block; margin: 0; padding: 0; text-align: left; white-space: pre-wrap; }
         .dark .patrion-ai-message.is-user .patrion-ai-bubble { background: #e8edf5; color: #172033; }
         .patrion-ai-message.is-assistant .patrion-ai-bubble { max-width: calc(100% - 2.05rem); padding: .1rem 0; color: var(--ai-ink); }
         .patrion-ai-bubble p + p, .patrion-ai-bubble ul, .patrion-ai-bubble ol { margin-top: .5rem; }
@@ -95,7 +96,7 @@
         .patrion-ai-bubble a { color: #b45309; font-weight: 650; text-decoration: underline; text-decoration-color: rgb(180 83 9 / .35); text-underline-offset: 2px; }
         .dark .patrion-ai-bubble a { color: #fbbf24; }
         .patrion-ai-time { margin-top: .25rem; color: var(--ai-muted); font-size: .59rem; line-height: 1; opacity: .75; }
-        .patrion-ai-message.is-user .patrion-ai-time { margin-top: 0; color: inherit; opacity: .55; text-align: right; }
+        .patrion-ai-message.is-user .patrion-ai-time { align-self: flex-end; margin: 0; color: inherit; opacity: .55; text-align: right; }
         .patrion-ai-thinking { display: flex; align-items: center; gap: .45rem; margin: -.15rem 0 .9rem 2.05rem; color: var(--ai-muted); font-size: .68rem; }
         .patrion-ai-thinking-dots { display: flex; gap: .2rem; }
         .patrion-ai-dot { width: .28rem; height: .28rem; border-radius: 999px; background: var(--ai-accent); animation: patrion-ai-pulse 1s infinite alternate; }
@@ -221,7 +222,7 @@
                                     @if ($chatMessage->role === 'assistant')
                                         {!! $chatMessage->renderedContent() !!}
                                     @else
-                                        {{ $chatMessage->content }}
+                                        <span class="patrion-ai-user-text">{{ $chatMessage->content }}</span>
                                     @endif
                                     <div class="patrion-ai-time">{{ $chatMessage->created_at->format('H:i') }}</div>
                                 </div>
@@ -230,7 +231,7 @@
                     @endif
 
                     <div x-cloak x-show="working" class="patrion-ai-message is-user">
-                        <div class="patrion-ai-bubble"><span x-text="optimistic"></span><div class="patrion-ai-time">adesso</div></div>
+                        <div class="patrion-ai-bubble"><span class="patrion-ai-user-text" x-text="optimistic"></span><div class="patrion-ai-time">adesso</div></div>
                     </div>
                     <div x-cloak x-show="working" class="patrion-ai-message is-assistant">
                         <div class="patrion-ai-assistant-mark"><x-filament::icon icon="heroicon-o-sparkles" class="h-3 w-3" /></div>
