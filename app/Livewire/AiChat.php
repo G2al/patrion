@@ -139,7 +139,7 @@ class AiChat extends Component
             $answer = app(CrmAssistant::class)->answer(
                 $conversation,
                 $this->user(),
-                fn (string $delta) => $this->stream(to: 'ai-answer', content: e($this->streamPreview($delta))),
+                null,
                 fn (string $status) => $this->stream(to: 'ai-status', content: e($status), replace: true),
             );
             $assistantMessage = $conversation->messages()->create([
@@ -181,10 +181,5 @@ class AiChat extends Component
         $user = auth()->user();
 
         return $user;
-    }
-
-    private function streamPreview(string $delta): string
-    {
-        return str_replace(['**', '__', '```', '`', '###', '##', '#', '[', ']'], '', $delta);
     }
 }
