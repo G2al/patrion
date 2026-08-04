@@ -4,39 +4,26 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Models\Appointment;
-use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Practice;
-use Illuminate\Database\Eloquent\Model;
 
-class NoteSeeder extends DemoSeeder
+final class NoteSeeder extends DemoSeeder
 {
     public function run(): void
     {
         $owner = $this->owner();
-        $contacts = Contact::query()->where('tax_code', 'like', 'DMOC%')->orderBy('id')->get();
-        $companies = Company::query()->where('name', 'like', 'Azienda Demo %')->orderBy('id')->get();
-        $practices = Practice::query()->where('internal_number', 'like', 'DEMO-PR-%')->orderBy('id')->get();
-        $appointments = Appointment::query()->where('title', 'like', 'DEMO Appuntamento %')->orderBy('id')->get();
+        $contacts = Contact::query()->get()->keyBy('email');
+        $practices = Practice::query()->get()->keyBy('internal_number');
+        $notes = [
+            ['contact' => 'luigi.iommelli@example.test', 'title' => 'Preferenza orario', 'content' => 'Luigi preferisce vedersi la mattina perché è più disponibile e concentrato.', 'important' => true],
+            ['contact' => 'alessandra.costantini@example.test', 'title' => 'Documenti da raccogliere', 'content' => 'Prima del prossimo incontro servono documento di identità e situazione previdenziale.', 'important' => true],
+            ['contact' => 'davide.moretti@example.test', 'title' => 'Obiezione sui costi', 'content' => 'Il prospect vuole confrontare i costi prima di procedere con una proposta.', 'important' => false],
+            ['practice' => 'PR-2026-002', 'title' => 'Prossimo passo pratica', 'content' => 'Preparare la proposta di protezione e condividerla dopo la verifica documentale.', 'important' => false],
+        ];
 
-        foreach (range(1, 40) as $index) {
-            $subject = match (true) {
-                $index <= 20 => $contacts[($index - 1) % $contacts->count()],
-                $index <= 28 => $companies[($index - 1) % $companies->count()],
-                $index <= 35 => $practices[($index - 1) % $practices->count()],
-                default => $appointments[($index - 1) % $appointments->count()],
-            };
-            $this->createNote($subject, $index, $owner->id);
+        foreach ($notes as $data) {
+            $subject = isset($data['contact']) ? $contacts[$data['contact']] : $practices[$data['practice']];
+            $subject->notes()->updateOrCreate(['title' => $data['title']], ['content' => $data['content'], 'is_important' => $data['important'], 'author_id' => $owner->id]);
         }
-    }
-
-    private function createNote(Model $subject, int $index, int $authorId): void
-    {
-        $subject->notes()->firstOrCreate(['title' => sprintf('Nota demo %02d', $index)], [
-            'content' => 'Informazione dimostrativa sulla relazione, priva di dati personali reali.',
-            'is_important' => $index % 7 === 0,
-            'author_id' => $authorId,
-        ]);
     }
 }

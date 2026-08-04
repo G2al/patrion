@@ -7,18 +7,13 @@ namespace Database\Seeders;
 use App\Models\Company;
 use App\Models\Contact;
 
-class CompanyContactSeeder extends DemoSeeder
+final class CompanyContactSeeder extends DemoSeeder
 {
     public function run(): void
     {
-        $companies = Company::query()->where('name', 'like', 'Azienda Demo %')->orderBy('id')->get();
-        $contacts = Contact::query()->where('tax_code', 'like', 'DMOC%')->orderBy('id')->get();
-        $roles = ['administrator', 'shareholder', 'cfo', 'accountant', 'manager', 'contact_person'];
-
-        foreach (range(0, 23) as $index) {
-            $company = $companies[$index % $companies->count()];
-            $contact = $contacts[$index % $contacts->count()];
-            $company->contacts()->syncWithoutDetaching([$contact->id => ['role' => $roles[$index % count($roles)]]]);
-        }
+        $rinaldi = Company::query()->where('vat_number', 'IT09123456781')->firstOrFail();
+        $costantini = Company::query()->where('vat_number', 'IT09876543210')->firstOrFail();
+        $rinaldi->contacts()->syncWithoutDetaching([Contact::query()->where('email', 'marco.rinaldi@example.test')->value('id') => ['role' => 'Titolare']]);
+        $costantini->contacts()->syncWithoutDetaching([Contact::query()->where('email', 'alessandra.costantini@example.test')->value('id') => ['role' => 'Responsabile HR']]);
     }
 }

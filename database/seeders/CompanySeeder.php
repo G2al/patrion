@@ -6,16 +6,15 @@ namespace Database\Seeders;
 
 use App\Models\Company;
 
-class CompanySeeder extends DemoSeeder
+final class CompanySeeder extends DemoSeeder
 {
     public function run(): void
     {
-        foreach (range(1, 12) as $index) {
-            $vatNumber = sprintf('91%09d', $index);
-
-            if (! Company::query()->where('vat_number', $vatNumber)->exists()) {
-                Company::factory()->create(['name' => "Azienda Demo {$index} S.r.l.", 'vat_number' => $vatNumber, 'tax_code' => sprintf('92%09d', $index)]);
-            }
+        foreach ([
+            ['name' => 'Rinaldi Consulting S.r.l.', 'vat_number' => 'IT09123456781', 'industry' => 'Servizi professionali', 'email' => 'amministrazione@rinaldiconsulting.example.test', 'phone' => '+39 02 5550 1840', 'employees_count' => 12, 'revenue' => 1850000],
+            ['name' => 'Costantini Design S.r.l.s.', 'vat_number' => 'IT09876543210', 'industry' => 'Design e architettura', 'email' => 'info@costantinidesign.example.test', 'phone' => '+39 02 5550 2761', 'employees_count' => 7, 'revenue' => 760000],
+        ] as $data) {
+            Company::query()->updateOrCreate(['vat_number' => $data['vat_number']], $data);
         }
     }
 }

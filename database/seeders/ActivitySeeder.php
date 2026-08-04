@@ -9,43 +9,27 @@ use App\Enums\ActivityType;
 use App\Enums\Priority;
 use App\Models\Activity;
 use App\Models\Appointment;
-use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Practice;
 
-class ActivitySeeder extends DemoSeeder
+final class ActivitySeeder extends DemoSeeder
 {
     public function run(): void
     {
         $owner = $this->owner();
-        $contacts = Contact::query()->where('tax_code', 'like', 'DMOC%')->orderBy('id')->get();
-        $companies = Company::query()->where('name', 'like', 'Azienda Demo %')->orderBy('id')->get();
-        $practices = Practice::query()->where('internal_number', 'like', 'DEMO-PR-%')->orderBy('id')->get();
-        $appointments = Appointment::query()->where('title', 'like', 'DEMO Appuntamento %')->orderBy('id')->get();
+        $contacts = Contact::query()->get()->keyBy('email');
+        $practices = Practice::query()->get()->keyBy('internal_number');
+        $appointments = Appointment::query()->get()->keyBy('title');
+        $activities = [
+            ['title' => 'Inviare riepilogo revisione portafoglio', 'type' => ActivityType::Email, 'contact' => 'luigi.iommelli@example.test', 'practice' => 'PR-2026-001', 'due_at' => today()->addDays(2)->setTime(12, 0), 'status' => ActivityStatus::Pending, 'priority' => Priority::Medium],
+            ['title' => 'Raccogliere documenti previdenziali', 'type' => ActivityType::DocumentRequest, 'contact' => 'alessandra.costantini@example.test', 'practice' => 'PR-2026-003', 'due_at' => today()->addDay()->setTime(17, 0), 'status' => ActivityStatus::InProgress, 'priority' => Priority::High],
+            ['title' => 'Preparare proposta protezione', 'type' => ActivityType::PracticeReview, 'contact' => 'giulia.bianchi@example.test', 'practice' => 'PR-2026-002', 'due_at' => today()->addDays(4)->setTime(10, 0), 'status' => ActivityStatus::Pending, 'priority' => Priority::Medium],
+            ['title' => 'Richiamare dopo colloquio conoscitivo', 'type' => ActivityType::FollowUp, 'contact' => 'davide.moretti@example.test', 'due_at' => today()->subDay()->setTime(15, 0), 'status' => ActivityStatus::Pending, 'priority' => Priority::High],
+            ['title' => 'Confermare appuntamento revisione annuale', 'type' => ActivityType::Reminder, 'contact' => 'luigi.iommelli@example.test', 'appointment' => 'Revisione annuale del portafoglio', 'due_at' => today()->addDay()->setTime(8, 30), 'status' => ActivityStatus::Completed, 'priority' => Priority::Low, 'completed_at' => now()->subDay()],
+        ];
 
-        foreach (range(1, 50) as $index) {
-            $title = sprintf('DEMO Attività %02d', $index);
-            if (Activity::query()->where('title', $title)->exists()) {
-                continue;
-            }
-
-            $status = $index % 5 === 0 ? ActivityStatus::Completed : ($index % 7 === 0 ? ActivityStatus::InProgress : ActivityStatus::Pending);
-            $type = $index % 3 === 0 ? ActivityType::FollowUp : ActivityType::cases()[$index % count(ActivityType::cases())];
-            $dueAt = match (true) {
-                $index <= 12 => now()->subDays(($index % 5) + 1), $index <= 24 => today()->setTime(10 + ($index % 6), 0), default => now()->addDays(($index % 14) + 1)
-            };
-            $companySubject = $index % 8 === 0;
-
-            Activity::factory()->create([
-                'title' => $title, 'type' => $type,
-                'contact_id' => $companySubject ? null : $contacts[($index - 1) % $contacts->count()]->id,
-                'company_id' => $companySubject ? $companies[($index - 1) % $companies->count()]->id : null,
-                'practice_id' => $index % 4 === 0 ? $practices[($index - 1) % $practices->count()]->id : null,
-                'appointment_id' => $index % 6 === 0 ? $appointments[($index - 1) % $appointments->count()]->id : null,
-                'scheduled_at' => $dueAt->copy()->subHour(), 'due_at' => $dueAt,
-                'priority' => $index % 6 === 0 ? Priority::High : Priority::Medium, 'status' => $status,
-                'completed_at' => $status === ActivityStatus::Completed ? now()->subDays($index % 4) : null, 'owner_id' => $owner->id,
-            ]);
+        foreach ($activities as $data) {
+            Activity::query()->updateOrCreate(['title' => $data['title']], ['type' => $data['type'], 'contact_id' => $contacts[$data['contact']]->id, 'company_id' => null, 'practice_id' => isset($data['practice']) ? $practices[$data['practice']]->id : null, 'appointment_id' => isset($data['appointment']) ? $appointments[$data['appointment']]->id : null, 'due_at' => $data['due_at'], 'scheduled_at' => $data['due_at']->copy()->subHour(), 'status' => $data['status'], 'priority' => $data['priority'], 'completed_at' => $data['completed_at'] ?? null, 'owner_id' => $owner->id]);
         }
     }
 }

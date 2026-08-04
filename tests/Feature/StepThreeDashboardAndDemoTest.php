@@ -163,13 +163,13 @@ class StepThreeDashboardAndDemoTest extends TestCase
 
         $this->assertSame(1, User::query()->count());
         $this->assertSame($counts, $this->demoCounts());
-        $this->assertGreaterThanOrEqual(25, Contact::query()->clients()->count());
-        $this->assertGreaterThanOrEqual(20, Contact::query()->prospects()->count());
-        $this->assertGreaterThanOrEqual(8, Practice::query()->completed()->whereHas('practiceType', fn ($query) => $query->where('slug', 'pac'))->whereBetween('completed_at', [today()->startOfMonth(), today()->endOfMonth()])->count());
+        $this->assertSame(3, Contact::query()->clients()->count());
+        $this->assertSame(2, Contact::query()->prospects()->count());
+        $this->assertSame(1, Practice::query()->completed()->whereHas('practiceType', fn ($query) => $query->where('slug', 'pac'))->whereBetween('completed_at', [today()->startOfMonth(), today()->endOfMonth()])->count());
         $this->assertGreaterThan(0, Appointment::query()->whereDate('starts_at', today())->count());
         $this->assertGreaterThan(0, Activity::query()->where('due_at', '<', now())->where('status', '!=', ActivityStatus::Completed)->count());
         $this->assertGreaterThan(0, Document::query()->whereBetween('expires_at', [today(), today()->addDays(30)])->count());
-        Storage::disk('local')->assertExists('demo-documents/documento-demo-01.txt');
+        Storage::disk('local')->assertExists('seed-documents/documento-identità-luigi-iommelli.txt');
     }
 
     /** @return array<string, int> */
