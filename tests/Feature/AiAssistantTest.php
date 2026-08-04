@@ -147,6 +147,14 @@ class AiAssistantTest extends TestCase
         $this->assertSame(['get_prospect_outcomes'], $route['tools']);
     }
 
+    public function test_router_keeps_multiple_tools_for_operational_prospect_analysis(): void
+    {
+        $route = app(CrmIntentRouter::class)->route('Quali prospect non acquisiti devo prioritizzare e quali attività urgenti ho?');
+
+        $this->assertContains('get_prospect_outcomes', $route['tools']);
+        $this->assertContains('get_due_activities', $route['tools']);
+    }
+
     public function test_contact_history_translates_internal_codes_for_the_assistant(): void
     {
         $user = User::factory()->create();

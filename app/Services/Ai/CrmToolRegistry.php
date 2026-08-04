@@ -448,6 +448,11 @@ class CrmToolRegistry
                     ->where('owner_id', $user->id)
                     ->where('outcome', 'negative')
                     ->latest('starts_at'),
+                'activities' => fn ($query) => $query
+                    ->where('owner_id', $user->id)
+                    ->open()
+                    ->orderByRaw('due_at IS NULL')
+                    ->orderBy('due_at'),
             ])
             ->orderBy('last_name')
             ->get();
@@ -470,6 +475,14 @@ class CrmToolRegistry
                     'date' => $appointment->starts_at->toIso8601String(),
                     'negative_reason' => ItalianOptions::NEGATIVE_REASONS[$appointment->negative_reason] ?? $appointment->negative_reason,
                     'url' => AppointmentResource::getUrl('view', ['record' => $appointment], panel: 'admin'),
+                ])->all(),
+                'open_activities_count' => $contact->activities->count(),
+                'overdue_activities_count' => $contact->activities->filter(fn (Activity $activity): bool => $activity->due_at !== null && $activity->due_at->isPast())->count(),
+                'open_activities' => $contact->activities->take(5)->map(fn (Activity $activity): array => [
+                    'title' => $activity->title,
+                    'due_at' => $activity->due_at?->toIso8601String(),
+                    'priority' => ItalianOptions::PRIORITIES[$this->value($activity->priority)] ?? $this->value($activity->priority),
+                    'url' => ActivityResource::getUrl('edit', ['record' => $activity], panel: 'admin'),
                 ])->all(),
             ])->all(),
         ];

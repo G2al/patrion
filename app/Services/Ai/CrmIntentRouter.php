@@ -30,9 +30,13 @@ final class CrmIntentRouter
         $this->addWhen($tools, $normalized, ['aziend', 'societ', 'impresa'], ['search_companies', 'get_company_history']);
 
         if ($this->containsAny($normalized, ['prosp']) && $this->containsAny($normalized, ['non acquis', 'non conclus', 'non sono riuscit', 'non riuscit', 'pers', 'fallit', 'concludere'])) {
-            $tools = ['get_prospect_outcomes'];
+            // Non sostituire gli intenti già rilevati: una richiesta analitica
+            // può richiedere contemporaneamente prospect, attività e storico.
+            $tools = [...$tools, 'get_prospect_outcomes'];
+            $this->addWhen($tools, $normalized, ['priorit', 'urgente', 'scadut', 'attivit', 'follow-up', 'follow up', 'prossim'], ['get_due_activities']);
+            $this->addWhen($tools, $normalized, ['motivo', 'perch', 'storico', 'note', 'timeline', 'analizz'], ['search_contacts', 'get_contact_history']);
         } elseif ($this->containsAny($normalized, ['miglior client', 'cliente migliore', 'top client', 'clienti migliori', 'cliente piu importante', 'cliente piu redditizio'])) {
-            $tools = ['get_client_rankings'];
+            $tools = [...$tools, 'get_client_rankings'];
         } elseif ($this->containsAny($normalized, ['client', 'prosp', 'contatt', 'acquisit', 'convertit'])) {
             $tools = [...$tools, 'search_contacts', 'get_contact_history'];
         }
