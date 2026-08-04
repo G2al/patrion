@@ -29,6 +29,11 @@ final class CrmIntentRouter
         $this->addWhen($tools, $normalized, ['document', 'allegat', 'scadenz'], ['get_expiring_documents']);
         $this->addWhen($tools, $normalized, ['aziend', 'societ', 'impresa'], ['search_companies', 'get_company_history']);
 
+        $isNamedAppointmentRequest = $this->containsAny($normalized, ['fissami', 'fissa', 'prenota', 'organizza']) && Str::contains($normalized, ' con ');
+        if ($isNamedAppointmentRequest || ($this->containsAny($normalized, ['appuntament', 'incontr']) && $this->containsAny($normalized, ['preferenz', 'note relaz', 'relazional']))) {
+            $tools = ['search_contacts', 'get_contact_history', ...$tools];
+        }
+
         if ($this->containsAny($normalized, ['prosp']) && $this->containsAny($normalized, ['non acquis', 'non conclus', 'non sono riuscit', 'non riuscit', 'pers', 'fallit', 'concludere'])) {
             // Non sostituire gli intenti già rilevati: una richiesta analitica
             // può richiedere contemporaneamente prospect, attività e storico.
@@ -38,7 +43,9 @@ final class CrmIntentRouter
         } elseif ($this->containsAny($normalized, ['miglior client', 'cliente migliore', 'top client', 'clienti migliori', 'cliente piu importante', 'cliente piu redditizio'])) {
             $tools = [...$tools, 'get_client_rankings'];
         } elseif ($this->containsAny($normalized, ['client', 'prosp', 'contatt', 'acquisit', 'convertit'])) {
-            $tools = [...$tools, 'search_contacts', 'get_contact_history'];
+            // Quando è nominata una persona, la risoluzione del contatto viene
+            // prima di agenda e pratiche: evita conclusioni premature.
+            $tools = ['search_contacts', 'get_contact_history', ...$tools];
         }
 
         $this->addWhen($tools, $normalized, ['panoramica', 'riepilogo crm', 'situazione generale', 'quanti client', 'quanti prospect'], ['get_crm_overview']);

@@ -50,7 +50,7 @@ class CrmToolRegistry
                 'status' => ['type' => ['string', 'null'], 'enum' => ['client', 'prospect', null], 'description' => 'Filtra per client o prospect; null cerca entrambi.'],
                 'limit' => ['type' => 'integer', 'description' => 'Numero massimo di risultati, da 1 a 20.'],
             ]),
-            $this->tool('get_contact_history', 'Recupera quadro e storico verificabile di un cliente o prospect: note, timeline, appuntamenti, attività e pratiche. Usalo per riepiloghi e motivazioni di mancata acquisizione.', [
+            $this->tool('get_contact_history', 'Recupera il quadro completo e verificabile di un cliente o prospect: relationship_notes, informazioni importanti, note, timeline, appuntamenti, attività, pratiche e documenti. Usalo sempre dopo search_contacts quando l’utente nomina una persona o chiede preferenze, storico o dettagli.', [
                 'contact_id' => ['type' => 'integer', 'description' => 'ID del contatto restituito da search_contacts.'],
             ]),
             $this->tool('search_companies', 'Cerca aziende per ragione sociale, partita IVA, codice fiscale, email o settore.', [

@@ -155,6 +155,13 @@ class AiAssistantTest extends TestCase
         $this->assertContains('get_due_activities', $route['tools']);
     }
 
+    public function test_router_prioritizes_contact_resolution_before_agenda_for_named_client(): void
+    {
+        $route = app(CrmIntentRouter::class)->route('Fissami un appuntamento con Luigi Iommelli e verifica le sue preferenze.');
+
+        $this->assertSame(['search_contacts', 'get_contact_history', 'get_appointments'], $route['tools']);
+    }
+
     public function test_contact_history_translates_internal_codes_for_the_assistant(): void
     {
         $user = User::factory()->create();
