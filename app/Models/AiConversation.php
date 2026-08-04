@@ -26,4 +26,9 @@ class AiConversation extends Model
     {
         return $this->hasMany(AiToolCall::class);
     }
+
+    public function actions(): HasMany
+    {
+        return $this->hasMany(AiAction::class, 'ai_conversation_id');
+    }
 }

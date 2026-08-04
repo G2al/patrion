@@ -23,6 +23,7 @@ final class CrmIntentRouter
 
         $tools = [];
         $advisory = $this->containsAny($normalized, ['analizz', 'consigli', 'migliorare', 'opportunit', 'rischi', 'evitare', 'cosa posso fare', 'come gestire', 'strategia', 'consulenzial', 'copilota', 'proposta']);
+        $actionRequest = $this->containsAny($normalized, ['crea ', 'creare ', 'aggiungi ', 'modifica ', 'cambia ', 'aggiorna ', 'completa ', 'fissami ', 'fissa ', 'elimina ']);
         $this->addWhen($tools, $normalized, ['appuntament', 'agenda', 'calendario', 'incontr', 'telefonat'], ['get_appointments']);
         $this->addWhen($tools, $normalized, ['obiettiv', 'target', 'traguard'], ['get_goal_progress']);
         $this->addWhen($tools, $normalized, ['attivit', 'task', 'scadut', 'promemoria', 'cosa devo fare'], ['get_due_activities']);
@@ -54,6 +55,9 @@ final class CrmIntentRouter
         }
 
         $this->addWhen($tools, $normalized, ['panoramica', 'riepilogo crm', 'situazione generale', 'quanti client', 'quanti prospect'], ['get_crm_overview']);
+        if ($actionRequest) {
+            $tools[] = 'propose_crm_action';
+        }
         $tools = array_values(array_unique($tools));
 
         if ($tools === []) {

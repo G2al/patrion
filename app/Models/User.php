@@ -106,4 +106,9 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(AiConversation::class);
     }
+
+    public function aiActions(): HasMany
+    {
+        return $this->hasMany(AiAction::class);
+    }
 }

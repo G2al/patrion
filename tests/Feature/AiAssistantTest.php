@@ -159,7 +159,7 @@ class AiAssistantTest extends TestCase
     {
         $route = app(CrmIntentRouter::class)->route('Fissami un appuntamento con Luigi Iommelli e verifica le sue preferenze.');
 
-        $this->assertSame(['search_contacts', 'get_contact_history', 'get_appointments'], $route['tools']);
+        $this->assertSame(['search_contacts', 'get_contact_history', 'get_appointments', 'propose_crm_action'], $route['tools']);
     }
 
     public function test_contact_history_translates_internal_codes_for_the_assistant(): void

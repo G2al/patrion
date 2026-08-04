@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\AiAction;
 use App\Models\AiConversation;
 use App\Models\AiMessage;
 use App\Models\AiToolCall;
+use App\Services\Ai\AiActionService;
 use App\Services\Ai\AiAssistantException;
 use App\Services\Ai\CrmAssistant;
 use Illuminate\Http\JsonResponse;
@@ -84,6 +86,7 @@ final class AiConversationController extends ApiController
             return $this->ok([
                 'user_message' => $this->messageData($userMessage),
                 'assistant_message' => $this->messageData($assistantMessage),
+                'pending_actions' => $item->actions()->where('status', 'pending')->latest()->get(),
             ]);
         } catch (AiAssistantException $exception) {
             report($exception);
@@ -95,6 +98,29 @@ final class AiConversationController extends ApiController
 
             return $this->error('Si è verificato un errore inatteso durante la richiesta AI.', 500);
         }
+    }
+
+    public function actions(Request $request, int $conversation): JsonResponse
+    {
+        $item = $this->ownedConversation($request, $conversation);
+
+        return $this->ok(['actions' => $item->user->aiActions()->where('status', 'pending')->latest()->get()]);
+    }
+
+    public function confirmAction(Request $request, int $conversation, int $action, AiActionService $service): JsonResponse
+    {
+        $this->ownedConversation($request, $conversation);
+        $item = AiAction::query()->where('ai_conversation_id', $conversation)->findOrFail($action);
+
+        return $this->ok(['action' => $service->confirm($item, $request->user())]);
+    }
+
+    public function rejectAction(Request $request, int $conversation, int $action, AiActionService $service): JsonResponse
+    {
+        $this->ownedConversation($request, $conversation);
+        $item = AiAction::query()->where('ai_conversation_id', $conversation)->findOrFail($action);
+
+        return $this->ok(['action' => $service->reject($item, $request->user())]);
     }
 
     private function ownedConversation(Request $request, int $id): AiConversation

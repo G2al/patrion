@@ -16,6 +16,7 @@ use App\Filament\Resources\Prospects\ProspectResource;
 use App\Filament\Support\ItalianOptions;
 use App\Models\Activity;
 use App\Models\AiContactProfile;
+use App\Models\AiConversation;
 use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\Contact;
@@ -35,6 +36,10 @@ class CrmToolRegistry
     public function definitions(?array $only = null): array
     {
         $definitions = [
+            $this->tool('propose_crm_action', 'Prepara una modifica al CRM da sottoporre alla conferma esplicita dell’utente. Non esegue mai l’azione: crea solo una proposta pendente.', [
+                'action' => ['type' => 'string', 'enum' => AiActionService::ALLOWED, 'description' => 'Azione da proporre.'],
+                'payload' => ['type' => 'string', 'description' => 'JSON con i dati dell’azione, inclusi gli ID dei record quando necessari.'],
+            ]),
             $this->tool('get_client_rankings', 'Classifica i clienti con un criterio commerciale verificabile. Per "miglior cliente" usa commercial_value, basato sul valore effettivo delle pratiche completate dell’utente.', [
                 'metric' => ['type' => 'string', 'enum' => ['commercial_value', 'managed_assets', 'completed_practices'], 'description' => 'Criterio: valore pratiche concluse, patrimonio gestito oppure numero di pratiche concluse.'],
                 'limit' => ['type' => 'integer', 'description' => 'Numero massimo di clienti, da 1 a 10.'],
@@ -97,13 +102,14 @@ class CrmToolRegistry
     }
 
     /** @param array<string, mixed> $arguments */
-    public function execute(string $name, array $arguments, User $user): array
+    public function execute(string $name, array $arguments, User $user, ?AiConversation $conversation = null): array
     {
         return match ($name) {
             'get_appointments' => $this->appointments($arguments, $user),
             'search_contacts' => $this->contacts($arguments),
             'get_contact_history' => $this->contactHistory($arguments, $user),
             'get_contact_consulting_dossier' => $this->consultingDossier($arguments, $user),
+            'propose_crm_action' => $this->proposeAction($arguments, $user, $conversation),
             'search_companies' => $this->companies($arguments),
             'get_company_history' => $this->companyHistory($arguments, $user),
             'get_goal_progress' => $this->goals($arguments, $user),
@@ -115,6 +121,20 @@ class CrmToolRegistry
             'get_prospect_outcomes' => $this->prospectOutcomes($user),
             default => throw new InvalidArgumentException("Strumento non disponibile: {$name}"),
         };
+    }
+
+    private function proposeAction(array $arguments, User $user, ?AiConversation $conversation): array
+    {
+        if (! $conversation) {
+            throw new InvalidArgumentException('Impossibile creare una proposta fuori da una conversazione.');
+        }
+        $payload = json_decode((string) ($arguments['payload'] ?? '{}'), true);
+        if (! is_array($payload)) {
+            throw new InvalidArgumentException('Payload dell’azione non valido.');
+        }
+        $action = app(AiActionService::class)->propose($conversation, $user, (string) ($arguments['action'] ?? ''), $payload);
+
+        return ['action_id' => $action->id, 'action' => $action->action, 'status' => 'pending_confirmation', 'payload' => $action->payload, 'message' => 'Azione pronta. Richiede conferma esplicita dell’utente prima dell’esecuzione.'];
     }
 
     /** @param array<string, array<string, mixed>> $properties */

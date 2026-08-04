@@ -131,6 +131,7 @@ class CrmAssistant
             'get_client_rankings' => 'Calcolo la classifica clienti…',
             'get_prospect_outcomes' => 'Analizzo gli esiti dei prospect…',
             'get_contact_consulting_dossier' => 'Preparo il dossier consulenziale…',
+            'propose_crm_action' => 'Preparo la modifica da confermare…',
             default => 'Consulto il gestionale…',
         };
     }
@@ -152,7 +153,7 @@ class CrmAssistant
         ]);
 
         try {
-            $result = $this->tools->execute($name, $arguments, $user);
+            $result = $this->tools->execute($name, $arguments, $user, $conversation);
             $audit->update([
                 'result' => $result,
                 'status' => 'completed',
