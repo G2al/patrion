@@ -249,7 +249,7 @@
                             x-ref="input"
                             x-model="draft"
                             x-on:input="resize()"
-                            x-on:keydown.enter.exact.prevent="submit()"
+                            x-on:keydown.enter="if (! $event.shiftKey) { $event.preventDefault(); submit() }"
                             x-bind:disabled="working"
                             class="patrion-ai-textarea"
                             rows="1"
