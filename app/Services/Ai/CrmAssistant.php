@@ -129,6 +129,7 @@ class CrmAssistant
             'get_practices' => 'Analizzo le pratiche…',
             'get_expiring_documents' => 'Controllo i documenti…',
             'get_client_rankings' => 'Calcolo la classifica clienti…',
+            'get_prospect_outcomes' => 'Analizzo gli esiti dei prospect…',
             default => 'Consulto il gestionale…',
         };
     }

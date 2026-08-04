@@ -14,6 +14,7 @@ use App\Models\Practice;
 use App\Models\PracticeType;
 use App\Models\User;
 use App\Services\Ai\CrmAssistant;
+use App\Services\Ai\CrmIntentRouter;
 use App\Services\Ai\CrmToolRegistry;
 use App\Services\Ai\OpenAiResponsesClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -88,6 +89,62 @@ class AiAssistantTest extends TestCase
         $this->assertSame('valore effettivo delle pratiche completate', $ranking['metric_label']);
         $this->assertSame('Anna Verdi', $ranking['items'][0]['name']);
         $this->assertSame(50000.0, $ranking['items'][0]['completed_practices_value']);
+    }
+
+    public function test_client_ranking_does_not_invent_a_winner_when_every_value_is_zero(): void
+    {
+        $user = User::factory()->create();
+        $client = Contact::factory()->client()->create();
+        Practice::factory()->completed()->create([
+            'owner_id' => $user->id,
+            'contact_id' => $client->id,
+            'actual_value' => null,
+        ]);
+
+        $ranking = app(CrmToolRegistry::class)->execute('get_client_rankings', [
+            'metric' => 'commercial_value',
+            'limit' => 5,
+        ], $user);
+
+        $this->assertFalse($ranking['ranking_available']);
+        $this->assertSame(0, $ranking['count']);
+        $this->assertSame([], $ranking['items']);
+        $this->assertStringContainsString('Non indicare un miglior cliente', $ranking['unavailable_reason']);
+    }
+
+    public function test_prospect_outcomes_count_unique_prospects_instead_of_practices_or_companies(): void
+    {
+        $user = User::factory()->create();
+        $lostByPractice = Contact::factory()->prospect()->create();
+        $lostByAppointment = Contact::factory()->prospect()->create();
+        $activeProspect = Contact::factory()->prospect()->create();
+        $client = Contact::factory()->client()->create();
+
+        Practice::factory()->unsuccessful()->count(2)->create(['owner_id' => $user->id, 'contact_id' => $lostByPractice->id]);
+        Practice::factory()->unsuccessful()->create(['owner_id' => $user->id, 'contact_id' => $client->id]);
+        Appointment::factory()->completed()->create([
+            'owner_id' => $user->id,
+            'contact_id' => $lostByAppointment->id,
+            'company_id' => null,
+            'outcome' => 'negative',
+        ]);
+
+        $outcomes = app(CrmToolRegistry::class)->execute('get_prospect_outcomes', [], $user);
+
+        $this->assertSame(3, $outcomes['current_prospects_total']);
+        $this->assertSame(2, $outcomes['not_acquired_prospects_count']);
+        $this->assertEqualsCanonicalizing(
+            [$lostByPractice->id, $lostByAppointment->id],
+            collect($outcomes['items'])->pluck('id')->all(),
+        );
+        $this->assertNotContains($activeProspect->id, collect($outcomes['items'])->pluck('id')->all());
+    }
+
+    public function test_router_understands_misspelled_lost_prospect_question(): void
+    {
+        $route = app(CrmIntentRouter::class)->route('Quanti prospct non sono riuscito a concludere?');
+
+        $this->assertSame(['get_prospect_outcomes'], $route['tools']);
     }
 
     public function test_contact_history_translates_internal_codes_for_the_assistant(): void

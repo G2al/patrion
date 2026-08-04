@@ -29,9 +29,11 @@ final class CrmIntentRouter
         $this->addWhen($tools, $normalized, ['document', 'allegat', 'scadenz'], ['get_expiring_documents']);
         $this->addWhen($tools, $normalized, ['aziend', 'societ', 'impresa'], ['search_companies', 'get_company_history']);
 
-        if ($this->containsAny($normalized, ['miglior client', 'cliente migliore', 'top client', 'clienti migliori', 'cliente piu importante', 'cliente piu redditizio'])) {
+        if ($this->containsAny($normalized, ['prosp']) && $this->containsAny($normalized, ['non acquis', 'non conclus', 'non sono riuscit', 'non riuscit', 'pers', 'fallit', 'concludere'])) {
+            $tools = ['get_prospect_outcomes'];
+        } elseif ($this->containsAny($normalized, ['miglior client', 'cliente migliore', 'top client', 'clienti migliori', 'cliente piu importante', 'cliente piu redditizio'])) {
             $tools = ['get_client_rankings'];
-        } elseif ($this->containsAny($normalized, ['client', 'prospect', 'contatt', 'acquisit', 'convertit'])) {
+        } elseif ($this->containsAny($normalized, ['client', 'prosp', 'contatt', 'acquisit', 'convertit'])) {
             $tools = [...$tools, 'search_contacts', 'get_contact_history'];
         }
 
@@ -39,7 +41,7 @@ final class CrmIntentRouter
         $tools = array_values(array_unique($tools));
 
         if ($tools === []) {
-            $tools = ['search_contacts', 'get_contact_history', 'search_companies', 'get_company_history', 'get_goal_progress', 'get_due_activities', 'get_practices', 'get_expiring_documents', 'get_crm_overview', 'get_client_rankings'];
+            $tools = ['search_contacts', 'get_contact_history', 'search_companies', 'get_company_history', 'get_goal_progress', 'get_due_activities', 'get_practices', 'get_expiring_documents', 'get_crm_overview', 'get_client_rankings', 'get_prospect_outcomes'];
         }
 
         return [

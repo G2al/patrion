@@ -38,6 +38,7 @@ class CrmToolRegistry
                 'metric' => ['type' => 'string', 'enum' => ['commercial_value', 'managed_assets', 'completed_practices'], 'description' => 'Criterio: valore pratiche concluse, patrimonio gestito oppure numero di pratiche concluse.'],
                 'limit' => ['type' => 'integer', 'description' => 'Numero massimo di clienti, da 1 a 10.'],
             ]),
+            $this->tool('get_prospect_outcomes', 'Conta i prospect unici con evidenze esplicite di mancata acquisizione. Non confonde il numero di prospect con il numero di pratiche e non include le aziende.', []),
             $this->tool('get_appointments', 'Recupera gli appuntamenti dell’utente in un intervallo di date. Usalo per oggi, domani, una giornata o un periodo.', [
                 'from' => $this->nullableString('Data iniziale inclusa YYYY-MM-DD; null significa oggi.'),
                 'to' => $this->nullableString('Data finale inclusa YYYY-MM-DD; null significa la data iniziale.'),
@@ -106,6 +107,7 @@ class CrmToolRegistry
             'get_expiring_documents' => $this->documents($arguments, $user),
             'get_crm_overview' => $this->overview($user),
             'get_client_rankings' => $this->clientRankings($arguments, $user),
+            'get_prospect_outcomes' => $this->prospectOutcomes($user),
             default => throw new InvalidArgumentException("Strumento non disponibile: {$name}"),
         };
     }
@@ -387,6 +389,16 @@ class CrmToolRegistry
                     ->completed(),
             ], 'actual_value')
             ->get()
+            ->map(function (Contact $contact) use ($metric): Contact {
+                $contact->setAttribute('ranking_score', match ($metric) {
+                    'managed_assets' => (float) ($contact->managed_assets ?? 0),
+                    'completed_practices' => (int) $contact->completed_practices_count,
+                    default => (float) ($contact->completed_practices_value ?? 0),
+                });
+
+                return $contact;
+            })
+            ->filter(fn (Contact $contact): bool => (float) $contact->getAttribute('ranking_score') > 0)
             ->sortByDesc(fn (Contact $contact): float|int => match ($metric) {
                 'managed_assets' => (float) ($contact->managed_assets ?? 0),
                 'completed_practices' => (int) $contact->completed_practices_count,
@@ -401,6 +413,8 @@ class CrmToolRegistry
                 'completed_practices' => 'numero di pratiche completate',
                 default => 'valore effettivo delle pratiche completate',
             },
+            'ranking_available' => $clients->isNotEmpty(),
+            'unavailable_reason' => $clients->isEmpty() ? 'Nessun cliente possiede un valore positivo per la metrica richiesta. Non indicare un miglior cliente.' : null,
             'count' => $clients->count(),
             'items' => $clients->values()->map(fn (Contact $contact, int $index): array => [
                 'rank' => $index + 1,
@@ -408,6 +422,55 @@ class CrmToolRegistry
                 'managed_assets' => (float) ($contact->managed_assets ?? 0),
                 'completed_practices_count' => (int) $contact->completed_practices_count,
                 'completed_practices_value' => (float) ($contact->completed_practices_value ?? 0),
+            ])->all(),
+        ];
+    }
+
+    private function prospectOutcomes(User $user): array
+    {
+        $prospects = Contact::query()
+            ->prospects()
+            ->where(function (Builder $query) use ($user): void {
+                $query
+                    ->whereHas('practices', fn (Builder $query): Builder => $query
+                        ->where('owner_id', $user->id)
+                        ->where('status', 'unsuccessful'))
+                    ->orWhereHas('appointments', fn (Builder $query): Builder => $query
+                        ->where('owner_id', $user->id)
+                        ->where('outcome', 'negative'));
+            })
+            ->with([
+                'practices' => fn ($query) => $query
+                    ->where('owner_id', $user->id)
+                    ->where('status', 'unsuccessful')
+                    ->latest('opened_at'),
+                'appointments' => fn ($query) => $query
+                    ->where('owner_id', $user->id)
+                    ->where('outcome', 'negative')
+                    ->latest('starts_at'),
+            ])
+            ->orderBy('last_name')
+            ->get();
+
+        return [
+            'definition' => 'Prospect unici ancora nello stato prospect con almeno una pratica non conclusa o un appuntamento con esito negativo.',
+            'current_prospects_total' => Contact::query()->prospects()->count(),
+            'not_acquired_prospects_count' => $prospects->count(),
+            'items' => $prospects->map(fn (Contact $contact): array => [
+                ...$this->contactData($contact),
+                'unsuccessful_practices_count' => $contact->practices->count(),
+                'unsuccessful_practices' => $contact->practices->map(fn (Practice $practice): array => [
+                    'title' => $practice->title,
+                    'opened_at' => $practice->opened_at?->toDateString(),
+                    'url' => PracticeResource::getUrl('edit', ['record' => $practice], panel: 'admin'),
+                ])->all(),
+                'negative_appointments_count' => $contact->appointments->count(),
+                'negative_appointments' => $contact->appointments->map(fn (Appointment $appointment): array => [
+                    'title' => $appointment->title,
+                    'date' => $appointment->starts_at->toIso8601String(),
+                    'negative_reason' => ItalianOptions::NEGATIVE_REASONS[$appointment->negative_reason] ?? $appointment->negative_reason,
+                    'url' => AppointmentResource::getUrl('view', ['record' => $appointment], panel: 'admin'),
+                ])->all(),
             ])->all(),
         ];
     }
