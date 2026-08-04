@@ -8,6 +8,8 @@ use App\Models\Appointment;
 use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -44,5 +46,18 @@ final class ApiV1Test extends TestCase
 
         $this->getJson('/api/v1/contacts?search=Luigi')->assertOk()->assertJsonPath('data.0.first_name', 'Luigi');
         $this->getJson('/api/v1/appointments')->assertOk()->assertJsonCount(1, 'data');
+    }
+
+    public function test_authenticated_user_can_upload_profile_avatar(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $this->patchJson('/api/v1/auth/profile', ['name' => 'Tony Patrion', 'avatar' => UploadedFile::fake()->image('avatar.jpg')])
+            ->assertOk()
+            ->assertJsonPath('data.user.name', 'Tony Patrion');
+
+        Storage::disk('public')->assertExists($user->fresh()->avatar_path);
     }
 }

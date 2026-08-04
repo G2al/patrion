@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ActivityController;
+use App\Http\Controllers\Api\V1\AiConversationController;
 use App\Http\Controllers\Api\V1\AppointmentController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CompanyController;
@@ -32,7 +33,13 @@ Route::prefix('v1')->group(function (): void {
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::patch('notifications/{id}/read', [NotificationController::class, 'read']);
         Route::patch('notifications/read-all', [NotificationController::class, 'readAll']);
+        Route::get('ai/conversations', [AiConversationController::class, 'index']);
+        Route::post('ai/conversations', [AiConversationController::class, 'store']);
+        Route::get('ai/conversations/{conversation}', [AiConversationController::class, 'show']);
+        Route::delete('ai/conversations/{conversation}', [AiConversationController::class, 'destroy']);
+        Route::post('ai/conversations/{conversation}/messages', [AiConversationController::class, 'message']);
         Route::apiResource('contacts', ContactController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+        Route::get('contacts/{contact}/photo', [ContactController::class, 'photo']);
         Route::apiResource('companies', CompanyController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::apiResource('appointments', AppointmentController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::apiResource('activities', ActivityController::class)->only(['index', 'store', 'update', 'destroy']);

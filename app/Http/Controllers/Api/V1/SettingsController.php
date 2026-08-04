@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 final class SettingsController extends ApiController
@@ -25,7 +26,14 @@ final class SettingsController extends ApiController
 
     public function profile(Request $request)
     {
-        $data = $request->validate(['name' => ['sometimes', 'string', 'max:255'], 'email' => ['sometimes', 'email', 'max:255', 'unique:users,email,'.$request->user()->id]]);
+        $data = $request->validate(['name' => ['sometimes', 'string', 'max:255'], 'email' => ['sometimes', 'email', 'max:255', 'unique:users,email,'.$request->user()->id], 'avatar' => ['sometimes', 'nullable', 'image', 'max:5120']]);
+        if ($request->hasFile('avatar')) {
+            if (filled($request->user()->avatar_path)) {
+                Storage::disk('public')->delete($request->user()->avatar_path);
+            }
+            $data['avatar_path'] = $request->file('avatar')->store('avatars', 'public');
+        }
+        unset($data['avatar']);
         $request->user()->update($data);
 
         return $this->ok(['user' => $request->user()->fresh()]);

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements FilamentUser
@@ -52,6 +53,13 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'settings' => 'array',
         ];
+    }
+
+    protected $appends = ['avatar_url'];
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return filled($this->avatar_path) ? Storage::disk('public')->url($this->avatar_path) : null;
     }
 
     public function canAccessPanel(Panel $panel): bool

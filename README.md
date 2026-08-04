@@ -57,3 +57,6 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# API assistente Patrion
+
+Il backend espone gli endpoint autenticati `/api/v1/ai/conversations` per il widget Next.js. Il controller API è soltanto un adattatore HTTP: riutilizza `App\Services\Ai\CrmAssistant`, conserva messaggi e audit esistenti e verifica sempre che la conversazione appartenga all’utente Sanctum autenticato. La logica AI, i prompt, i tool CRM e la chiave OpenAI restano esclusivamente nel backend.
