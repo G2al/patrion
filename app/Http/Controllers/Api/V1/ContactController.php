@@ -8,7 +8,6 @@ use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class ContactController extends ApiController
 {
@@ -16,7 +15,7 @@ final class ContactController extends ApiController
         'first_name', 'last_name', 'birth_date', 'birth_place', 'tax_code',
         'identity_document_type', 'identity_document_number', 'identity_document_expires_at',
         'profession', 'marital_status', 'children_count', 'residence', 'domicile',
-        'email', 'phone', 'whatsapp', 'status', 'first_contact_date', 'source',
+        'email', 'phone', 'whatsapp', 'photo_path', 'status', 'first_contact_date', 'source',
         'referred_by_contact_id', 'priority', 'potential_value', 'managed_assets',
         'relationship_level', 'last_contact_at', 'next_follow_up_at', 'interests',
         'personal_goals', 'personality_style', 'preferred_communication',
@@ -31,7 +30,7 @@ final class ContactController extends ApiController
             $q->where(fn ($q) => $q->where('first_name', 'like', $like)->orWhere('last_name', 'like', $like)->orWhere('email', 'like', $like)->orWhere('phone', 'like', $like));
         });
 
-        return response()->json($query->orderBy('last_name')->paginate(min(50, max(1, $request->integer('per_page', 20))));
+        return response()->json($query->orderBy('last_name')->paginate(min(50, max(1, $request->integer('per_page', 20)))));
     }
 
     public function show(Contact $contact)
@@ -72,11 +71,15 @@ final class ContactController extends ApiController
         return $this->ok(['contact' => $contact->fresh()]);
     }
 
-    public function photo(Contact $contact): StreamedResponse
+    public function photo(int $contact)
     {
-        abort_unless($contact->photo_path && Storage::disk('local')->exists($contact->photo_path), 404);
+        $item = Contact::query()->findOrFail($contact);
+        if (! $item->photo_path || ! Storage::disk('local')->exists($item->photo_path)) {
+            return $this->error('Foto del contatto non trovata.', 404);
+        }
 
-        return Storage::disk('local')->response($contact->photo_path, headers: [
+        return response(Storage::disk('local')->get($item->photo_path), 200, [
+            'Content-Type' => Storage::disk('local')->mimeType($item->photo_path) ?: 'application/octet-stream',
             'Cache-Control' => 'private, max-age=3600',
         ]);
     }

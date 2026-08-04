@@ -60,4 +60,28 @@ final class ApiV1Test extends TestCase
 
         Storage::disk('public')->assertExists($user->fresh()->avatar_path);
     }
+
+    public function test_contact_complete_profile_and_private_photo_are_available_via_api(): void
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $response = $this->post('/api/v1/contacts', [
+            'first_name' => 'Mario', 'last_name' => 'Rossi', 'status' => 'client',
+            'priority' => 'high', 'residence' => 'Roma', 'children_count' => 2,
+            'interests' => ['investments'], 'photo' => UploadedFile::fake()->image('mario.jpg'),
+        ], ['Accept' => 'application/json']);
+
+        $response->assertCreated()->assertJsonPath('data.contact.residence', 'Roma');
+        $contactId = $response->json('data.contact.id');
+        $contact = Contact::query()->findOrFail($contactId);
+        Storage::disk('local')->assertExists($contact->photo_path);
+        $this->get("/api/v1/contacts/{$contactId}/photo", ['Accept' => 'image/*'])->assertOk();
+
+        $this->post("/api/v1/contacts/{$contactId}", [
+            '_method' => 'PATCH', 'first_name' => 'Mario', 'last_name' => 'Rossi',
+            'status' => 'client', 'priority' => 'high', 'personality_style' => 'Analitico',
+        ], ['Accept' => 'application/json'])->assertOk()->assertJsonPath('data.contact.personality_style', 'Analitico');
+    }
 }

@@ -38,8 +38,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('ai/conversations/{conversation}', [AiConversationController::class, 'show']);
         Route::delete('ai/conversations/{conversation}', [AiConversationController::class, 'destroy']);
         Route::post('ai/conversations/{conversation}/messages', [AiConversationController::class, 'message']);
-        Route::apiResource('contacts', ContactController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::get('contacts/{contact}/photo', [ContactController::class, 'photo']);
+        Route::apiResource('contacts', ContactController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::apiResource('companies', CompanyController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::apiResource('appointments', AppointmentController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::apiResource('activities', ActivityController::class)->only(['index', 'store', 'update', 'destroy']);
