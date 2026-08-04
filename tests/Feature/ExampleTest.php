@@ -7,6 +7,11 @@ use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    public function test_public_root_redirects_to_admin_panel(): void
+    {
+        $this->get('/')->assertRedirect('/admin');
+    }
+
     /**
      * A basic test example.
      */
@@ -14,6 +19,6 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        $response->assertRedirect('/admin');
     }
 }
