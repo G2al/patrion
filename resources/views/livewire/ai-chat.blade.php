@@ -59,9 +59,9 @@
 >
     <style>
         .patrion-ai-root { --ai-accent: #f59e0b; --ai-ink: #7c3f00; --ai-muted: #8a6a45; --ai-line: #f0c27b; --ai-surface: #fffaf2; --ai-soft: #fff1d6; position: relative; z-index: 60; }
-        .dark .patrion-ai-root { --ai-ink: #f59e0b; --ai-muted: #d3a86d; --ai-line: #5a3715; --ai-surface: #17120d; --ai-soft: #261b10; }
+        .dark .patrion-ai-root { --ai-ink: #f8fafc; --ai-muted: #aab3c2; --ai-line: #303949; --ai-surface: #111827; --ai-soft: #1b2535; }
         .patrion-ai-launcher { position: fixed; right: 1.5rem; bottom: 1.5rem; display: grid; width: 3.5rem; height: 3.5rem; place-items: center; border: 1px solid rgb(255 255 255 / .72); border-radius: 999px; background: var(--ai-ink); color: var(--ai-surface); box-shadow: 0 14px 36px rgb(15 23 42 / .24); cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; }
-        .dark .patrion-ai-launcher { border-color: rgb(255 255 255 / .12); background: #f8fafc; color: #172033; }
+        .dark .patrion-ai-launcher { border-color: rgb(245 158 11 / .45); background: #d97706; color: #fff7ed; }
         .patrion-ai-launcher:hover { transform: translateY(-2px); box-shadow: 0 18px 42px rgb(15 23 42 / .3); }
         .patrion-ai-launcher:focus-visible { outline: 3px solid rgb(245 158 11 / .3); outline-offset: 3px; }
         .patrion-ai-launcher-status { position: absolute; right: .08rem; bottom: .22rem; width: .72rem; height: .72rem; border: 2px solid var(--ai-surface); border-radius: 999px; background: #22c55e; }
@@ -71,7 +71,7 @@
         .patrion-ai-window-visible { opacity: 1; transform: translateY(0) scale(1); }
         .patrion-ai-header { display: flex; min-height: 3.85rem; align-items: center; gap: .7rem; padding: .65rem .75rem .65rem .85rem; border-bottom: 1px solid rgb(255 255 255 / .16); background: linear-gradient(135deg, #c26100, #9f4800); color: #fffaf2; }
         .patrion-ai-avatar { position: relative; display: grid; width: 2.35rem; height: 2.35rem; flex: 0 0 auto; place-items: center; border-radius: .75rem; background: var(--ai-ink); color: var(--ai-surface); }
-        .dark .patrion-ai-avatar { background: #f8fafc; color: #172033; }
+        .dark .patrion-ai-avatar { background: #f8fafc; color: #172033; box-shadow: 0 4px 14px rgb(0 0 0 / .22); }
         .patrion-ai-avatar::after { position: absolute; right: -.08rem; bottom: -.08rem; width: .58rem; height: .58rem; border: 2px solid var(--ai-surface); border-radius: 999px; background: #22c55e; content: ''; }
         .patrion-ai-heading { min-width: 0; flex: 1; }
         .patrion-ai-heading strong { display: block; font-size: .875rem; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; }
@@ -105,8 +105,8 @@
         .patrion-ai-bubble { max-width: 83%; font-size: .8rem; line-height: 1.58; overflow-wrap: anywhere; }
         .patrion-ai-message.is-user .patrion-ai-bubble { display: inline-flex; width: auto; height: auto !important; min-height: 0 !important; max-width: 74%; flex-direction: column; align-items: stretch; gap: .3rem; padding: .58rem .72rem .48rem; border-radius: .9rem .9rem .24rem .9rem; background: var(--ai-ink); color: var(--ai-surface); line-height: 1.42; white-space: normal; }
         .patrion-ai-user-text { display: block; margin: 0; padding: 0; text-align: left; white-space: pre-wrap; }
-        .dark .patrion-ai-message.is-user .patrion-ai-bubble { background: #d97706; color: #fffaf2; }
-        .patrion-ai-message.is-assistant .patrion-ai-bubble { max-width: calc(100% - 2.05rem); padding: .1rem 0; color: var(--ai-ink); }
+        .dark .patrion-ai-message.is-user .patrion-ai-bubble { background: linear-gradient(135deg, #d97706, #b45309); color: #fff; box-shadow: 0 5px 16px rgb(0 0 0 / .18); }
+        .patrion-ai-message.is-assistant .patrion-ai-bubble { max-width: calc(100% - 2.05rem); padding: .48rem .7rem; border: 1px solid var(--ai-line); border-radius: .2rem .85rem .85rem .85rem; background: var(--ai-soft); color: var(--ai-ink); }
         .patrion-ai-streaming-preview { min-height: 1.25rem; white-space: pre-wrap; overflow-wrap: anywhere; }
         .patrion-ai-bubble p + p, .patrion-ai-bubble ul, .patrion-ai-bubble ol { margin-top: .5rem; }
         .patrion-ai-bubble ul { list-style: disc; padding-left: 1.05rem; }
