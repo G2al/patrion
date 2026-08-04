@@ -214,8 +214,8 @@ class CrmToolRegistry
                 'first_contact_date' => $contact->first_contact_date?->toDateString(),
                 'last_contact_at' => $contact->last_contact_at?->toIso8601String(),
                 'next_follow_up_at' => $contact->next_follow_up_at?->toIso8601String(),
-                'interests' => $contact->interests,
-                'personal_goals' => $contact->personal_goals,
+                'interests' => $this->translatedValues($contact->interests, ItalianOptions::INTERESTS),
+                'personal_goals' => $this->translatedValues($contact->personal_goals, ItalianOptions::PERSONAL_GOALS),
                 'important_information' => $this->text($contact->important_information),
                 'relationship_notes' => $this->text($contact->relationship_notes),
             ],
@@ -438,8 +438,8 @@ class CrmToolRegistry
             'ends_at' => $appointment->ends_at->toIso8601String(),
             'mode' => ItalianOptions::APPOINTMENT_MODES[$appointment->mode] ?? $appointment->mode,
             'location' => $appointment->location,
-            'status' => ItalianOptions::APPOINTMENT_STATUSES[$this->value($appointment->status)] ?? $this->value($appointment->status),
-            'outcome' => ItalianOptions::APPOINTMENT_OUTCOMES[$this->value($appointment->outcome)] ?? $this->value($appointment->outcome),
+            'appointment_status' => ItalianOptions::APPOINTMENT_STATUSES[$this->value($appointment->status)] ?? $this->value($appointment->status),
+            'appointment_outcome' => ItalianOptions::APPOINTMENT_OUTCOMES[$this->value($appointment->outcome)] ?? $this->value($appointment->outcome),
             'url' => AppointmentResource::getUrl('view', ['record' => $appointment], panel: 'admin'),
         ];
     }
@@ -555,6 +555,19 @@ class CrmToolRegistry
     private function contactName(Contact $contact): string
     {
         return trim("{$contact->first_name} {$contact->last_name}");
+    }
+
+    /**
+     * @param  array<int, string>|null  $values
+     * @param  array<string, string>  $labels
+     * @return array<int, string>
+     */
+    private function translatedValues(?array $values, array $labels): array
+    {
+        return collect($values ?? [])
+            ->map(fn (string $value): string => $labels[$value] ?? $value)
+            ->values()
+            ->all();
     }
 
     private function text(mixed $value): ?string

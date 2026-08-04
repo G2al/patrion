@@ -1,6 +1,7 @@
 <div
     class="patrion-ai-root"
     x-data="{
+        open: @js($isOpen),
         working: false,
         draft: '',
         optimistic: '',
@@ -46,7 +47,10 @@
         .patrion-ai-launcher:hover { transform: translateY(-2px); box-shadow: 0 18px 42px rgb(15 23 42 / .3); }
         .patrion-ai-launcher:focus-visible { outline: 3px solid rgb(245 158 11 / .3); outline-offset: 3px; }
         .patrion-ai-launcher-status { position: absolute; right: .08rem; bottom: .22rem; width: .72rem; height: .72rem; border: 2px solid var(--ai-surface); border-radius: 999px; background: #22c55e; }
-        .patrion-ai-window { position: fixed; right: 1.5rem; bottom: 5.85rem; display: flex; width: min(28rem, calc(100vw - 2rem)); height: min(41rem, calc(100dvh - 7.5rem)); min-height: 29rem; flex-direction: column; overflow: hidden; border: 1px solid var(--ai-line); border-radius: 1.15rem; background: var(--ai-surface); color: var(--ai-ink); box-shadow: 0 26px 80px rgb(15 23 42 / .24), 0 4px 16px rgb(15 23 42 / .1); transform-origin: bottom right; }
+        .patrion-ai-window { position: fixed; right: 1.5rem; bottom: 5.85rem; display: flex; width: min(28rem, calc(100vw - 2rem)); height: min(41rem, calc(100dvh - 7.5rem)); min-height: 29rem; flex-direction: column; overflow: hidden; border: 1px solid var(--ai-line); border-radius: 1.15rem; background: var(--ai-surface); color: var(--ai-ink); box-shadow: 0 26px 80px rgb(15 23 42 / .24), 0 4px 16px rgb(15 23 42 / .1); transform-origin: bottom right; will-change: transform, opacity; }
+        .patrion-ai-window-transition { transition: opacity .24s cubic-bezier(.16, 1, .3, 1), transform .3s cubic-bezier(.16, 1, .3, 1); }
+        .patrion-ai-window-hidden { opacity: 0; transform: translateY(.9rem) scale(.965); }
+        .patrion-ai-window-visible { opacity: 1; transform: translateY(0) scale(1); }
         .patrion-ai-header { display: flex; min-height: 3.85rem; align-items: center; gap: .7rem; padding: .65rem .75rem .65rem .85rem; border-bottom: 1px solid var(--ai-line); background: var(--ai-surface); }
         .patrion-ai-avatar { position: relative; display: grid; width: 2.35rem; height: 2.35rem; flex: 0 0 auto; place-items: center; border-radius: .75rem; background: var(--ai-ink); color: var(--ai-surface); }
         .dark .patrion-ai-avatar { background: #f8fafc; color: #172033; }
@@ -77,11 +81,11 @@
         .patrion-ai-suggestion { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: .7rem; padding: .65rem .72rem; border: 1px solid var(--ai-line); border-radius: .72rem; background: var(--ai-surface); color: var(--ai-ink); text-align: left; font-size: .75rem; transition: border-color .15s ease, background .15s ease, transform .15s ease; }
         .patrion-ai-suggestion:hover { border-color: rgb(245 158 11 / .65); background: color-mix(in srgb, var(--ai-accent) 6%, var(--ai-surface)); transform: translateX(2px); }
         .patrion-ai-suggestion svg { width: .9rem; flex: 0 0 auto; color: var(--ai-muted); }
-        .patrion-ai-message { display: flex; align-items: flex-end; gap: .48rem; margin-bottom: .9rem; }
+        .patrion-ai-message { display: flex; align-items: flex-end; gap: .48rem; margin-bottom: .9rem; animation: patrion-ai-message-in .28s cubic-bezier(.16, 1, .3, 1) both; }
         .patrion-ai-message.is-user { justify-content: flex-end; }
         .patrion-ai-assistant-mark { display: grid; width: 1.55rem; height: 1.55rem; flex: 0 0 auto; place-items: center; border: 1px solid var(--ai-line); border-radius: .5rem; background: var(--ai-soft); color: var(--ai-ink); }
         .patrion-ai-bubble { max-width: 83%; font-size: .8rem; line-height: 1.58; overflow-wrap: anywhere; }
-        .patrion-ai-message.is-user .patrion-ai-bubble { padding: .58rem .72rem; border-radius: .82rem .82rem .22rem .82rem; background: var(--ai-ink); color: var(--ai-surface); white-space: pre-wrap; }
+        .patrion-ai-message.is-user .patrion-ai-bubble { display: inline-flex; width: fit-content; height: auto !important; min-height: 0 !important; max-width: 78%; flex-direction: column; align-items: flex-end; gap: .28rem; padding: .55rem .7rem; border-radius: .82rem .82rem .22rem .82rem; background: var(--ai-ink); color: var(--ai-surface); line-height: 1.42; white-space: pre-wrap; }
         .dark .patrion-ai-message.is-user .patrion-ai-bubble { background: #e8edf5; color: #172033; }
         .patrion-ai-message.is-assistant .patrion-ai-bubble { max-width: calc(100% - 2.05rem); padding: .1rem 0; color: var(--ai-ink); }
         .patrion-ai-bubble p + p, .patrion-ai-bubble ul, .patrion-ai-bubble ol { margin-top: .5rem; }
@@ -91,13 +95,14 @@
         .patrion-ai-bubble a { color: #b45309; font-weight: 650; text-decoration: underline; text-decoration-color: rgb(180 83 9 / .35); text-underline-offset: 2px; }
         .dark .patrion-ai-bubble a { color: #fbbf24; }
         .patrion-ai-time { margin-top: .25rem; color: var(--ai-muted); font-size: .59rem; line-height: 1; opacity: .75; }
-        .patrion-ai-message.is-user .patrion-ai-time { color: inherit; opacity: .55; text-align: right; }
+        .patrion-ai-message.is-user .patrion-ai-time { margin-top: 0; color: inherit; opacity: .55; text-align: right; }
         .patrion-ai-thinking { display: flex; align-items: center; gap: .45rem; margin: -.15rem 0 .9rem 2.05rem; color: var(--ai-muted); font-size: .68rem; }
         .patrion-ai-thinking-dots { display: flex; gap: .2rem; }
         .patrion-ai-dot { width: .28rem; height: .28rem; border-radius: 999px; background: var(--ai-accent); animation: patrion-ai-pulse 1s infinite alternate; }
         .patrion-ai-dot:nth-child(2) { animation-delay: .18s; }
         .patrion-ai-dot:nth-child(3) { animation-delay: .36s; }
         @keyframes patrion-ai-pulse { to { opacity: .22; transform: translateY(-2px); } }
+        @keyframes patrion-ai-message-in { from { opacity: 0; transform: translateY(.4rem); } to { opacity: 1; transform: translateY(0); } }
         .patrion-ai-composer { border-top: 1px solid var(--ai-line); background: var(--ai-surface); padding: .72rem .78rem .68rem; }
         .patrion-ai-compose-shell { display: flex; align-items: flex-end; gap: .45rem; padding: .35rem .38rem .35rem .72rem; border: 1px solid var(--ai-line); border-radius: .9rem; background: var(--ai-soft); transition: border-color .15s ease, box-shadow .15s ease, background .15s ease; }
         .patrion-ai-compose-shell:focus-within { border-color: rgb(245 158 11 / .7); background: var(--ai-surface); box-shadow: 0 0 0 3px rgb(245 158 11 / .1); }
@@ -118,20 +123,25 @@
             .patrion-ai-messages { padding-inline: .85rem; }
         }
         @media (prefers-reduced-motion: reduce) {
-            .patrion-ai-launcher, .patrion-ai-suggestion, .patrion-ai-send, .patrion-ai-messages { transition: none; scroll-behavior: auto; }
-            .patrion-ai-dot { animation: none; }
+            .patrion-ai-launcher, .patrion-ai-suggestion, .patrion-ai-send, .patrion-ai-messages, .patrion-ai-window-transition { transition: none; scroll-behavior: auto; }
+            .patrion-ai-dot, .patrion-ai-message { animation: none; }
         }
     </style>
 
-    @if ($isOpen)
         <section
             class="patrion-ai-window"
             role="dialog"
             aria-modal="false"
             aria-label="Assistente AI Patrion"
-            x-on:keydown.escape.window="$wire.closeChat()"
-            x-init="$nextTick(() => { scroll(); $refs.input?.focus() })"
-            wire:transition.opacity.scale.95
+            x-cloak
+            x-show="open"
+            x-on:keydown.escape.window="open = false"
+            x-transition:enter="patrion-ai-window-transition"
+            x-transition:enter-start="patrion-ai-window-hidden"
+            x-transition:enter-end="patrion-ai-window-visible"
+            x-transition:leave="patrion-ai-window-transition"
+            x-transition:leave-start="patrion-ai-window-visible"
+            x-transition:leave-end="patrion-ai-window-hidden"
         >
             <header class="patrion-ai-header">
                 <div class="patrion-ai-avatar">
@@ -148,7 +158,7 @@
                     <button type="button" wire:click="newConversation" class="patrion-ai-icon-button" aria-label="Nuova conversazione" title="Nuova conversazione">
                         <x-filament::icon icon="heroicon-o-plus" class="h-4 w-4" />
                     </button>
-                    <button type="button" wire:click="closeChat" class="patrion-ai-icon-button" aria-label="Chiudi" title="Chiudi">
+                    <button type="button" x-on:click="open = false" class="patrion-ai-icon-button" aria-label="Chiudi" title="Chiudi">
                         <x-filament::icon icon="heroicon-o-x-mark" class="h-4 w-4" />
                     </button>
                 </div>
@@ -255,10 +265,17 @@
                 </form>
             </div>
         </section>
-    @else
-        <button type="button" wire:click="openChat" class="patrion-ai-launcher" aria-label="Apri Assistente AI" title="Assistente AI">
+        <button
+            type="button"
+            x-cloak
+            x-show="! open"
+            x-on:click="open = true; $nextTick(() => { scroll(); $refs.input?.focus() })"
+            x-transition.opacity.scale.90.duration.180ms
+            class="patrion-ai-launcher"
+            aria-label="Apri Assistente AI"
+            title="Assistente AI"
+        >
             <x-filament::icon icon="heroicon-o-sparkles" class="h-6 w-6" />
             <span class="patrion-ai-launcher-status" aria-hidden="true"></span>
         </button>
-    @endif
 </div>

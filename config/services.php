@@ -40,7 +40,7 @@ return [
         'model' => env('OPENAI_MODEL', 'gpt-5.4-nano'),
         'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
         'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
-        'verbosity' => env('OPENAI_VERBOSITY', 'medium'),
+        'verbosity' => env('OPENAI_VERBOSITY', 'low'),
         'max_output_tokens' => (int) env('OPENAI_MAX_OUTPUT_TOKENS', 3000),
         'max_tool_rounds' => (int) env('OPENAI_MAX_TOOL_ROUNDS', 6),
         'timeout' => (int) env('OPENAI_TIMEOUT', 60),

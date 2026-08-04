@@ -90,6 +90,20 @@ class AiAssistantTest extends TestCase
         $this->assertSame(50000.0, $ranking['items'][0]['completed_practices_value']);
     }
 
+    public function test_contact_history_translates_internal_codes_for_the_assistant(): void
+    {
+        $user = User::factory()->create();
+        $contact = Contact::factory()->prospect()->create([
+            'interests' => ['other', 'pension'],
+            'personal_goals' => ['retirement', 'savings', 'income'],
+        ]);
+
+        $history = app(CrmToolRegistry::class)->execute('get_contact_history', ['contact_id' => $contact->id], $user);
+
+        $this->assertSame(['Altro', 'Previdenza'], $history['contact']['interests']);
+        $this->assertSame(['Pensione', 'Accumulo', 'Reddito'], $history['contact']['personal_goals']);
+    }
+
     public function test_latest_question_is_last_and_conversational_turn_has_no_crm_tools(): void
     {
         config()->set('services.openai.api_key', 'test-key');
@@ -225,7 +239,8 @@ class AiAssistantTest extends TestCase
             && $request['store'] === false
             && $request['reasoning']['effort'] === 'low'
             && str_contains($request['instructions'], 'Non inventare mai')
-            && str_contains($request['instructions'], '<verification_loop>'));
+            && str_contains($request['instructions'], '<verification_loop>')
+            && str_contains($request['instructions'], 'Non terminare con domande generiche'));
         Http::assertSent(fn (Request $request): bool => collect($request['input'])->contains(
             fn (mixed $item): bool => is_array($item) && ($item['type'] ?? null) === 'function_call_output' && str_contains($item['output'], 'Mario Rossi')
         ));

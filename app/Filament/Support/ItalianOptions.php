@@ -16,7 +16,7 @@ final class ItalianOptions
 
     public const PRACTICE_STATUSES = ['draft' => 'Bozza', 'in_progress' => 'In lavorazione', 'waiting' => 'In attesa', 'completed' => 'Completata', 'unsuccessful' => 'Non conclusa', 'cancelled' => 'Annullata'];
 
-    public const APPOINTMENT_STATUSES = ['scheduled' => 'Programmato', 'completed' => 'Completato', 'cancelled' => 'Annullato', 'no_show' => 'Cliente assente'];
+    public const APPOINTMENT_STATUSES = ['scheduled' => 'Programmato', 'completed' => 'Completato', 'cancelled' => 'Annullato', 'no_show' => 'Contatto assente'];
 
     public const APPOINTMENT_OUTCOMES = ['positive' => 'Positivo', 'negative' => 'Negativo', 'postponed' => 'Rinviato', 'to_follow_up' => 'Da approfondire'];
 
