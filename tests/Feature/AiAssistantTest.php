@@ -183,6 +183,12 @@ class AiAssistantTest extends TestCase
         $this->assertSame($contact->id, $result['items'][0]['id']);
     }
 
+    public function test_follow_up_message_keeps_action_tool_context(): void
+    {
+        $route = app(CrmIntentRouter::class)->route('60 min', true);
+        $this->assertContains('propose_crm_action', $route['tools']);
+    }
+
     public function test_latest_question_is_last_and_conversational_turn_has_no_crm_tools(): void
     {
         config()->set('services.openai.api_key', 'test-key');

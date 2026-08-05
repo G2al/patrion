@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 final class CrmIntentRouter
 {
     /** @return array{mode: string, tools: array<int, string>, guidance: string} */
-    public function route(string $message): array
+    public function route(string $message, bool $hasPendingActionContext = false): array
     {
         $normalized = Str::of($message)->ascii()->lower()->squish()->toString();
 
@@ -23,7 +23,7 @@ final class CrmIntentRouter
 
         $tools = [];
         $advisory = $this->containsAny($normalized, ['analizz', 'consigli', 'migliorare', 'opportunit', 'rischi', 'evitare', 'cosa posso fare', 'come gestire', 'strategia', 'consulenzial', 'copilota', 'proposta']);
-        $actionRequest = $this->containsAny($normalized, ['crea ', 'creare ', 'aggiungi ', 'modifica ', 'cambia ', 'aggiorna ', 'completa ', 'fissami ', 'fissa ', 'elimina ']);
+        $actionRequest = $hasPendingActionContext || $this->containsAny($normalized, ['crea ', 'creare ', 'aggiungi ', 'modifica ', 'cambia ', 'aggiorna ', 'completa ', 'fissami ', 'fissa ', 'elimina ']);
         $this->addWhen($tools, $normalized, ['appuntament', 'agenda', 'calendario', 'incontr', 'telefonat'], ['get_appointments']);
         $this->addWhen($tools, $normalized, ['obiettiv', 'target', 'traguard'], ['get_goal_progress']);
         $this->addWhen($tools, $normalized, ['attivit', 'task', 'scadut', 'promemoria', 'cosa devo fare'], ['get_due_activities']);

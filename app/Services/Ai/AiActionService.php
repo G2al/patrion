@@ -10,6 +10,7 @@ use App\Models\Contact;
 use App\Models\Goal;
 use App\Models\Practice;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 
@@ -21,6 +22,10 @@ final class AiActionService
     {
         if (! in_array($action, self::ALLOWED, true)) {
             throw ValidationException::withMessages(['action' => 'Azione non autorizzata.']);
+        }
+
+        if ($action === 'create_appointment' && filled($payload['starts_at'] ?? null) && blank($payload['ends_at'] ?? null)) {
+            $payload['ends_at'] = Carbon::parse((string) $payload['starts_at'])->addHour()->toDateTimeString();
         }
 
         return AiAction::create(['user_id' => $user->id, 'ai_conversation_id' => $conversation->id, 'action' => $action, 'payload' => $payload, 'status' => 'pending']);
@@ -52,7 +57,7 @@ final class AiActionService
             $item->update(['status' => 'rejected']);
         }
 
-return $item->fresh();
+        return $item->fresh();
     }
 
     private function owned(object $model, User $user): object

@@ -27,7 +27,9 @@ class CrmAssistant
         }
 
         $currentQuestion = (string) $conversation->messages()->reorder()->where('role', 'user')->latest('id')->value('content');
-        $route = $this->router->route($currentQuestion);
+        $recentUserMessages = $conversation->messages()->reorder()->where('role', 'user')->latest('id')->limit(6)->pluck('content');
+        $hasPendingActionContext = $conversation->actions()->where('status', 'pending')->exists() || $recentUserMessages->contains(fn (string $message): bool => (bool) preg_match('/\b(fissa|fissami|prenota|crea|creare|appuntament)\b/i', $message));
+        $route = $this->router->route($currentQuestion, $hasPendingActionContext);
         $input = $conversation->messages()
             ->reorder()
             ->latest('id')
