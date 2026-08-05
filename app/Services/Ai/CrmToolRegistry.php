@@ -204,15 +204,18 @@ class CrmToolRegistry
         }
 
         $like = $this->like($text);
+        $tokens = collect(preg_split('/\s+/', $text, -1, PREG_SPLIT_NO_EMPTY))->map(fn (string $token): string => $this->like($token))->values();
         $status = $arguments['status'] ?? null;
         $contacts = Contact::query()
             ->when($status, fn (Builder $query, string $status): Builder => $query->where('status', $status))
-            ->where(function (Builder $query) use ($like): void {
-                $query->where('first_name', 'like', $like)
-                    ->orWhere('last_name', 'like', $like)
-                    ->orWhere('email', 'like', $like)
-                    ->orWhere('phone', 'like', $like)
-                    ->orWhere('tax_code', 'like', $like);
+            ->where(function (Builder $query) use ($like, $tokens): void {
+                $query->where(function (Builder $query) use ($tokens): void {
+                    foreach ($tokens as $token) {
+                        $query->where(function (Builder $query) use ($token): void {
+                            $query->where('first_name', 'like', $token)->orWhere('last_name', 'like', $token);
+                        });
+                    }
+                })->orWhere('email', 'like', $like)->orWhere('phone', 'like', $like)->orWhere('tax_code', 'like', $like);
             })
             ->orderBy('last_name')
             ->limit($this->limit($arguments))

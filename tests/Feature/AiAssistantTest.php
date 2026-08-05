@@ -176,6 +176,13 @@ class AiAssistantTest extends TestCase
         $this->assertSame(['Pensione', 'Accumulo', 'Reddito'], $history['contact']['personal_goals']);
     }
 
+    public function test_contact_search_matches_full_name_in_any_order(): void
+    {
+        $contact = Contact::factory()->client()->create(['first_name' => 'Giulia', 'last_name' => 'Bianchi']);
+        $result = app(CrmToolRegistry::class)->execute('search_contacts', ['query' => 'Giulia Bianchi', 'status' => 'client', 'limit' => 10], User::factory()->create());
+        $this->assertSame($contact->id, $result['items'][0]['id']);
+    }
+
     public function test_latest_question_is_last_and_conversational_turn_has_no_crm_tools(): void
     {
         config()->set('services.openai.api_key', 'test-key');
