@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Appointment;
+use App\Models\Company;
 use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -97,5 +98,22 @@ final class ApiV1Test extends TestCase
         $this->postJson('/api/v1/emails', ['contact_id' => $contact->id, 'sender_name' => 'Mario Rossi', 'sender_email' => 'mario@example.test', 'recipient_email' => 'admin@patrion.it', 'subject' => 'Documenti', 'body' => 'Invio documenti', 'direction' => 'incoming', 'is_important' => true])->assertCreated();
         $this->getJson('/api/v1/emails?is_read=0')->assertOk()->assertJsonPath('data.0.subject', 'Documenti');
         $this->getJson("/api/v1/contacts/{$contact->id}")->assertOk()->assertJsonStructure(['data' => ['contact' => ['professionals', 'client_goals', 'assigned_user']]]);
+    }
+
+    public function test_unified_clients_endpoint_contains_clients_prospects_and_companies(): void
+    {
+        $user = User::factory()->create();
+        $client = Contact::factory()->client()->create(['first_name' => 'Cliente', 'last_name' => 'Uno']);
+        $prospect = Contact::factory()->prospect()->create(['first_name' => 'Prospect', 'last_name' => 'Due']);
+        $company = Company::factory()->create(['name' => 'Azienda Unificata']);
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson('/api/v1/clients')->assertOk();
+        $this->assertCount(3, $response->json('data'));
+        $this->assertContains('contact:'.$client->id, collect($response->json('data'))->pluck('id')->all());
+        $this->assertContains('contact:'.$prospect->id, collect($response->json('data'))->pluck('id')->all());
+        $this->getJson('/api/v1/clients?type=company')->assertOk()->assertJsonPath('data.0.id', 'company:'.$company->id);
+        $this->getJson('/api/v1/clients/contact:'.$client->id)->assertOk()->assertJsonPath('data.client.entity_type', 'contact');
+        $this->getJson('/api/v1/clients/company:'.$company->id)->assertOk()->assertJsonPath('data.client.entity_type', 'company');
     }
 }

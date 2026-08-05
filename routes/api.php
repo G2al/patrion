@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\ActivityController;
 use App\Http\Controllers\Api\V1\AiConversationController;
 use App\Http\Controllers\Api\V1\AppointmentController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ContactGoalController;
@@ -30,6 +31,8 @@ Route::prefix('v1')->group(function (): void {
         Route::patch('auth/password', [SettingsController::class, 'password']);
         Route::get('dashboard', DashboardController::class);
         Route::get('search', SearchController::class);
+        Route::get('clients', [ClientController::class, 'index']);
+        Route::get('clients/{client}', [ClientController::class, 'show']);
         Route::get('lookups', LookupController::class);
         Route::get('settings', [SettingsController::class, 'show']);
         Route::patch('settings', [SettingsController::class, 'update']);
