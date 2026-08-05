@@ -9,4 +9,5 @@ enum DocumentStatus: string
     case Valid = 'valid';
     case Expired = 'expired';
     case Archived = 'archived';
+    case Missing = 'missing';
 }

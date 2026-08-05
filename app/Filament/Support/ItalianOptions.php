@@ -30,7 +30,7 @@ final class ItalianOptions
 
     public const GOAL_STATUSES = ['active' => 'Attivo', 'achieved' => 'Raggiunto', 'expired' => 'Scaduto', 'cancelled' => 'Annullato'];
 
-    public const DOCUMENT_STATUSES = ['valid' => 'Valido', 'expired' => 'Scaduto', 'archived' => 'Archiviato'];
+    public const DOCUMENT_STATUSES = ['valid' => 'Valido', 'expired' => 'Scaduto', 'archived' => 'Archiviato', 'missing' => 'Mancante'];
 
     public const DOCUMENT_CATEGORIES = ['Documento di identità' => 'Documento di identità', 'Tessera sanitaria' => 'Tessera sanitaria', 'Contratto' => 'Contratto', 'Questionario' => 'Questionario', 'Estratto conto' => 'Estratto conto', 'Bilancio' => 'Bilancio', 'Visura' => 'Visura', 'Statuto' => 'Statuto', 'Altro' => 'Altro'];
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AppointmentController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\ClientDashboardController;
+use App\Http\Controllers\Api\V1\ClientImportController;
 use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ContactGoalController;
@@ -34,6 +35,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('search', SearchController::class);
         Route::get('clients', [ClientController::class, 'index']);
         Route::get('clients/dashboard', ClientDashboardController::class);
+        Route::post('clients/import/preview', [ClientImportController::class, 'preview']);
+        Route::post('clients/import', [ClientImportController::class, 'import']);
         Route::get('clients/{client}', [ClientController::class, 'show']);
         Route::get('lookups', LookupController::class);
         Route::get('settings', [SettingsController::class, 'show']);
