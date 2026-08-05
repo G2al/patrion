@@ -9,12 +9,25 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Document extends Model
 {
     use HasFactory;
 
     protected $guarded = ['id'];
+
+    public function getFileSizeAttribute(mixed $value): ?int
+    {
+        if ($value !== null) {
+            return (int) $value;
+        }
+        if (filled($this->file_path) && Storage::disk($this->disk)->exists($this->file_path)) {
+            return Storage::disk($this->disk)->size($this->file_path);
+        }
+
+        return null;
+    }
 
     protected function casts(): array
     {

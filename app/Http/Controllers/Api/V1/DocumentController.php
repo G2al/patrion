@@ -12,7 +12,7 @@ final class DocumentController extends ApiController
 {
     public function index(Request $request)
     {
-        $query = $request->user()->uploadedDocuments()->with(['contact', 'company', 'practice'])->when($request->string('status')->value(), fn ($q, $status) => $q->where('status', $status))->when($request->string('category')->value(), fn ($q, $category) => $q->where('category', $category))->when($request->date('expires_from'), fn ($q, $date) => $q->whereDate('expires_at', '>=', $date))->when($request->date('expires_to'), fn ($q, $date) => $q->whereDate('expires_at', '<=', $date))->when($request->string('search')->value(), fn ($q, $search) => $q->where('name', 'like', '%'.$search.'%'))->orderBy('expires_at');
+        $query = $request->user()->uploadedDocuments()->with(['contact', 'company', 'practice', 'uploadedBy'])->when($request->string('status')->value(), fn ($q, $status) => $q->where('status', $status))->when($request->string('category')->value(), fn ($q, $category) => $q->where('category', $category))->when($request->date('expires_from'), fn ($q, $date) => $q->whereDate('expires_at', '>=', $date))->when($request->date('expires_to'), fn ($q, $date) => $q->whereDate('expires_at', '<=', $date))->when($request->string('search')->value(), fn ($q, $search) => $q->where('name', 'like', '%'.$search.'%'))->orderBy('expires_at');
 
         return response()->json($query->paginate(min(100, max(1, $request->integer('per_page', 50)))));
     }
@@ -21,7 +21,7 @@ final class DocumentController extends ApiController
     {
         abort_unless($document->uploaded_by_id === $request->user()->id, 404);
 
-        return $this->ok(['document' => $document->load(['contact', 'company', 'practice'])]);
+        return $this->ok(['document' => $document->load(['contact', 'company', 'practice', 'uploadedBy'])]);
     }
 
     public function download(Request $request, Document $document)
@@ -46,10 +46,11 @@ final class DocumentController extends ApiController
         $file = $request->file('file');
         $data['disk'] = 'local';
         $data['file_path'] = $file->store('documents');
+        $data['file_size'] = $file->getSize();
         unset($data['file']);
         $document = $request->user()->uploadedDocuments()->create([...$data, 'status' => $data['status'] ?? 'valid']);
 
-        return $this->ok(['document' => $document->load(['contact', 'company', 'practice'])], 201);
+        return $this->ok(['document' => $document->load(['contact', 'company', 'practice', 'uploadedBy'])], 201);
     }
 
     public function update(Request $request, Document $document)
@@ -58,7 +59,7 @@ final class DocumentController extends ApiController
         $data = $request->validate(['name' => ['sometimes', 'string', 'max:255'], 'category' => ['nullable', 'string'], 'description' => ['nullable', 'string'], 'expires_at' => ['nullable', 'date'], 'status' => ['nullable', 'string'], 'notes' => ['nullable', 'string']]);
         $document->update($data);
 
-        return $this->ok(['document' => $document->fresh()->load(['contact', 'company', 'practice'])]);
+        return $this->ok(['document' => $document->fresh()->load(['contact', 'company', 'practice', 'uploadedBy'])]);
     }
 
     public function destroy(Request $request, Document $document)

@@ -84,4 +84,18 @@ final class ApiV1Test extends TestCase
             'status' => 'client', 'priority' => 'high', 'personality_style' => 'Analitico',
         ], ['Accept' => 'application/json'])->assertOk()->assertJsonPath('data.contact.personality_style', 'Analitico');
     }
+
+    public function test_contact_extended_data_professionals_goals_and_emails_are_available(): void
+    {
+        $user = User::factory()->create(['email' => 'admin@patrion.it']);
+        Sanctum::actingAs($user);
+
+        $contact = Contact::factory()->create(['status' => 'client']);
+        $this->patchJson("/api/v1/contacts/{$contact->id}", ['client_type' => 'business', 'tags' => ['Premium'], 'relationship_score' => 5, 'assigned_user_id' => $user->id])->assertOk()->assertJsonPath('data.contact.relationship_score', 5);
+        $this->postJson("/api/v1/contacts/{$contact->id}/professionals", ['name' => 'Andrea Ferri', 'role' => 'Commercialista'])->assertCreated();
+        $this->postJson("/api/v1/contacts/{$contact->id}/goals", ['title' => 'Riserva di liquidità', 'progress_percentage' => 25])->assertCreated();
+        $this->postJson('/api/v1/emails', ['contact_id' => $contact->id, 'sender_name' => 'Mario Rossi', 'sender_email' => 'mario@example.test', 'recipient_email' => 'admin@patrion.it', 'subject' => 'Documenti', 'body' => 'Invio documenti', 'direction' => 'incoming', 'is_important' => true])->assertCreated();
+        $this->getJson('/api/v1/emails?is_read=0')->assertOk()->assertJsonPath('data.0.subject', 'Documenti');
+        $this->getJson("/api/v1/contacts/{$contact->id}")->assertOk()->assertJsonStructure(['data' => ['contact' => ['professionals', 'client_goals', 'assigned_user']]]);
+    }
 }

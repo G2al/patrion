@@ -17,7 +17,7 @@ final class ContactController extends ApiController
         'profession', 'marital_status', 'children_count', 'residence', 'domicile',
         'email', 'phone', 'whatsapp', 'photo_path', 'status', 'first_contact_date', 'source',
         'referred_by_contact_id', 'priority', 'potential_value', 'managed_assets',
-        'relationship_level', 'last_contact_at', 'next_follow_up_at', 'interests',
+        'relationship_level', 'relationship_score', 'assigned_user_id', 'last_contact_at', 'next_follow_up_at', 'interests', 'client_type', 'tags',
         'personal_goals', 'personality_style', 'preferred_communication',
         'contact_frequency', 'hobbies', 'family_information', 'birthdays',
         'anniversaries', 'important_information', 'relationship_notes',
@@ -35,7 +35,7 @@ final class ContactController extends ApiController
 
     public function show(Contact $contact)
     {
-        return $this->ok(['contact' => $contact->load(['referredBy', 'companies', 'appointments', 'activities', 'practices', 'documents', 'notes', 'timelineEvents'])]);
+        return $this->ok(['contact' => $contact->load(['referredBy', 'assignedUser', 'companies', 'appointments', 'activities', 'practices', 'documents.uploadedBy', 'notes', 'timelineEvents', 'professionals', 'clientGoals'])]);
     }
 
     public function store(Request $request)
@@ -118,6 +118,8 @@ final class ContactController extends ApiController
             'whatsapp' => ['nullable', 'string', 'max:255'],
             'photo' => ['nullable', 'image', 'max:5120'],
             'status' => [$required, 'in:client,prospect'],
+            'client_type' => ['nullable', 'in:private,business'],
+            'tags' => ['nullable', 'array'], 'tags.*' => ['string', 'max:100'],
             'first_contact_date' => ['nullable', 'date'],
             'source' => ['nullable', 'in:event,referral,linkedin,instagram,client,cold_call,other'],
             'referred_by_contact_id' => ['nullable', 'integer', 'exists:contacts,id', Rule::notIn(array_filter([$contact?->id]))],
@@ -125,6 +127,8 @@ final class ContactController extends ApiController
             'potential_value' => ['nullable', 'numeric', 'min:0'],
             'managed_assets' => ['nullable', 'numeric', 'min:0'],
             'relationship_level' => ['nullable', 'string', 'max:255'],
+            'relationship_score' => ['nullable', 'integer', 'min:1', 'max:5'],
+            'assigned_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'last_contact_at' => ['nullable', 'date'],
             'next_follow_up_at' => ['nullable', 'date'],
             'interests' => ['nullable', 'array'], 'interests.*' => ['string', 'max:255'],

@@ -37,6 +37,8 @@ class Contact extends Model
             'interests' => 'array',
             'personal_goals' => 'array',
             'hobbies' => 'array',
+            'tags' => 'array',
+            'relationship_score' => 'integer',
             'birthdays' => 'array',
             'anniversaries' => 'array',
         ];
@@ -70,6 +72,26 @@ class Contact extends Model
     public function companies(): BelongsToMany
     {
         return $this->belongsToMany(Company::class)->withPivot('role')->withTimestamps();
+    }
+
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
+    public function professionals(): HasMany
+    {
+        return $this->hasMany(ContactProfessional::class);
+    }
+
+    public function clientGoals(): HasMany
+    {
+        return $this->hasMany(ContactGoal::class);
+    }
+
+    public function emails(): HasMany
+    {
+        return $this->hasMany(Email::class);
     }
 
     public function appointments(): HasMany

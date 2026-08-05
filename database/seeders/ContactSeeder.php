@@ -24,5 +24,16 @@ final class ContactSeeder extends DemoSeeder
         foreach ($contacts as $index => $data) {
             Contact::query()->updateOrCreate(['email' => $data['email']], [...$data, 'tax_code' => 'PATR'.str_pad((string) ($index + 1), 10, '0', STR_PAD_LEFT), 'first_contact_date' => now()->subDays(30 + ($index * 12)), 'last_contact_at' => now()->subDays(2 + $index), 'interests' => $data['status'] === ContactStatus::Client ? ['investments', 'protection'] : ['pension', 'savings'], 'personal_goals' => ['retirement', 'savings']]);
         }
+
+        $profiles = [
+            'luigi.iommelli@example.test' => ['client_type' => 'private', 'tags' => ['Premium', 'Famiglia'], 'relationship_score' => 5],
+            'giulia.bianchi@example.test' => ['client_type' => 'private', 'tags' => ['Famiglia'], 'relationship_score' => 4],
+            'marco.rinaldi@example.test' => ['client_type' => 'business', 'tags' => ['Premium'], 'relationship_score' => 4],
+            'alessandra.costantini@example.test' => ['client_type' => 'private', 'tags' => ['Famiglia'], 'relationship_score' => 3],
+            'davide.moretti@example.test' => ['client_type' => 'private', 'tags' => ['HNWI'], 'relationship_score' => 2],
+        ];
+        foreach ($profiles as $email => $profile) {
+            Contact::query()->where('email', $email)->update([...$profile, 'assigned_user_id' => $this->owner()->id]);
+        }
     }
 }

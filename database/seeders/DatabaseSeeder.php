@@ -26,6 +26,9 @@ class DatabaseSeeder extends Seeder
             DocumentSeeder::class,
             NoteSeeder::class,
             TimelineEventSeeder::class,
+            ContactProfessionalSeeder::class,
+            ContactGoalSeeder::class,
+            EmailSeeder::class,
         ]);
     }
 }

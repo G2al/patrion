@@ -92,6 +92,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Document::class, 'uploaded_by_id');
     }
 
+    public function emails(): HasMany
+    {
+        return $this->hasMany(Email::class);
+    }
+
     public function notes(): HasMany
     {
         return $this->hasMany(Note::class, 'author_id');

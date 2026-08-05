@@ -28,6 +28,7 @@ final class DashboardController extends ApiController
                 'open_practices' => $user->practices()->whereNotIn('status', ['completed', 'unsuccessful', 'cancelled'])->count(),
                 'documents_expiring_30_days' => $user->uploadedDocuments()->whereBetween('expires_at', [today(), today()->addDays(30)])->count(),
                 'active_goals' => $user->goals()->where('status', 'active')->count(),
+                'unread_emails' => $user->emails()->where('is_read', false)->count(),
             ],
             'next_appointment' => $nextAppointment,
             'priority_activities' => $user->activities()->with(['contact', 'company', 'practice'])->open()->orderByRaw('due_at IS NULL')->orderBy('due_at')->limit(5)->get(),
@@ -44,6 +45,8 @@ final class DashboardController extends ApiController
                 'progress_percentage' => $goal->progress_percentage,
                 'practice_type' => $goal->practiceType,
             ])->all(),
+            'today_appointments' => $user->appointments()->with(['contact', 'company', 'practice'])->whereDate('starts_at', today())->orderBy('starts_at')->get(),
+            'important_emails' => $user->emails()->with('contact')->orderByRaw('(is_read = 0 AND is_important = 1) DESC')->orderBy('is_read')->orderByDesc('is_important')->orderByDesc('received_at')->limit(3)->get(),
         ]);
     }
 }
