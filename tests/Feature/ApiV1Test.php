@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\TimelineEvent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -115,5 +116,23 @@ final class ApiV1Test extends TestCase
         $this->getJson('/api/v1/clients?type=company')->assertOk()->assertJsonPath('data.0.id', 'company:'.$company->id);
         $this->getJson('/api/v1/clients/contact:'.$client->id)->assertOk()->assertJsonPath('data.client.entity_type', 'contact');
         $this->getJson('/api/v1/clients/company:'.$company->id)->assertOk()->assertJsonPath('data.client.entity_type', 'company');
+    }
+
+    public function test_clients_dashboard_returns_growth_today_and_neglected_contacts(): void
+    {
+        $user = User::factory()->create();
+        $old = Contact::factory()->client()->create(['first_name' => 'Vecchio', 'last_name' => 'Cliente']);
+        $old->forceFill(['created_at' => now()->subMonths(4), 'first_contact_date' => now()->subMonths(4), 'last_contact_at' => now()->subMonths(4)])->saveQuietly();
+        $recent = Contact::factory()->prospect()->create(['created_at' => now()->subDays(3), 'first_contact_date' => now()->subDays(3)]);
+        Appointment::factory()->create(['owner_id' => $user->id, 'contact_id' => $recent->id, 'company_id' => null, 'starts_at' => today()->setTime(10, 0), 'ends_at' => today()->setTime(11, 0)]);
+        Company::factory()->create(['created_at' => now()->subDays(2)]);
+        TimelineEvent::query()->delete();
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson('/api/v1/clients/dashboard?months=6&neglected_limit=10')->assertOk();
+        $response->assertJsonStructure(['data' => ['stats' => ['total', 'clients', 'prospects', 'companies'], 'monthly_growth', 'today_activities', 'neglected_clients']]);
+        $this->assertCount(6, $response->json('data.monthly_growth'));
+        $this->assertSame('contact:'.$old->id, $response->json('data.neglected_clients.0.id'));
+        $this->assertSame('appointment:'.$user->appointments()->first()->id, $response->json('data.today_activities.0.id'));
     }
 }

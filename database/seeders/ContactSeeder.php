@@ -35,5 +35,6 @@ final class ContactSeeder extends DemoSeeder
         foreach ($profiles as $email => $profile) {
             Contact::query()->where('email', $email)->update([...$profile, 'assigned_user_id' => $this->owner()->id]);
         }
+        Contact::query()->where('email', 'davide.moretti@example.test')->update(['last_contact_at' => now()->subDays(95)]);
     }
 }

@@ -11,6 +11,7 @@ Il frontend usa le API Laravel sotto `/api/v1` con un Bearer token Sanctum.
 ## Endpoint autenticati
 
 - `GET /dashboard`
+- `GET /clients/dashboard?months=3|6|12&neglected_limit=10`
 - `GET /contacts?search=&status=&page=&per_page=`
 - `GET /contacts/{contact}`
 - `GET /companies?search=&page=&per_page=`
